@@ -44,10 +44,13 @@ interface CustomCol {
     editor?: boolean
     editor2?: boolean
     upload?: boolean
+    alt_class?: string
+    date?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
   label: string;
+  alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string | string[];
   search_queries: string[];
@@ -190,8 +193,20 @@ export default function DataTable({
 
     console.log('already set isLoading to TRUE');
     setError(null);
-    let finalSearchQuery;
-    finalSearchQuery = Object.keys(searchQuery).length == 0 ? '' : searchQuery
+    let finalSearchQuery: Record<any, any> | string = {};
+    finalSearchQuery = searchQuery
+    console.log(finalSearchQuery)
+
+    try {
+      for (const key in finalSearchQuery) {
+        if (finalSearchQuery[key] === '') {
+          delete finalSearchQuery[key];
+        }
+      }
+
+    } catch (e) {
+      finalSearchQuery = ''
+    }
     const apiData = {
       search: { regex: 'false', value: finalSearchQuery },
       additional_join_statements: JSON.stringify(join_statements),
@@ -207,7 +222,7 @@ export default function DataTable({
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null);
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
-    console.log(apiData)
+    console.info(apiData)
     try {
       const response = await fetch(`${blog_url}/svt_api/${model}?${queryString}`, {
         headers: {
@@ -304,7 +319,7 @@ export default function DataTable({
     setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
       (async () => {
-        console.log("Deleting item", item.id);
+
 
         await postData({
           method: "DELETE",
@@ -312,7 +327,7 @@ export default function DataTable({
         });
 
         await fetchData(currentPage); // Explicitly await fetchData
-        console.log("fetch after delete?");
+
         setConfirmModalOpen(false);
 
         toast({
@@ -476,11 +491,16 @@ export default function DataTable({
     }
 
     if (column.color) {
-      console.log(column)
-      console.log(value)
+
+      let showVal = value
+
+
+      if ([true, false].includes(value)) {
+        showVal = value ? 'Yes' : 'No'
+      }
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {value ? 'Yes' : 'No'}
+          {showVal.replace("_", " ")}
         </Badge>
       )
     }
@@ -509,6 +529,10 @@ export default function DataTable({
       return (
         <div className="hasJson">
           <JSONTree data={value}
+          shouldExpandNodeInitially={(k, d, l) => {
+
+            return false;
+          }}
             theme={{
               extend: theme,
 
@@ -527,7 +551,7 @@ export default function DataTable({
     }
 
     if (column.showImg) {
-      console.log(value)
+    
       if (value) {
         return (
           <div style={{ width: '120px' }}>
