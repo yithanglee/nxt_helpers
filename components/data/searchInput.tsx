@@ -38,6 +38,10 @@ const SearchInput: React.FC<SearchInputProps> = ({model, join_statements, search
 
                 console.log(join_statements)
 
+                if (join_statements == undefined){
+                  return ''
+                }
+
                 let dict: Record<any,any> = {}, dictKeys  = ['b','c','d', 'e', 'f'], head = ''
                 dict['a'] = model 
 
@@ -55,6 +59,7 @@ const SearchInput: React.FC<SearchInputProps> = ({model, join_statements, search
                   head = dict[singleQuery.split('.')[0]].replace("_", " ");
              
                 }catch(e){
+
                   console.error(e)
 
                 }
