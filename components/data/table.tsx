@@ -529,10 +529,10 @@ export default function DataTable({
       return (
         <div className="hasJson">
           <JSONTree data={value}
-          shouldExpandNodeInitially={(k, d, l) => {
+            shouldExpandNodeInitially={(k, d, l) => {
 
-            return false;
-          }}
+              return false;
+            }}
             theme={{
               extend: theme,
 
@@ -551,7 +551,7 @@ export default function DataTable({
     }
 
     if (column.showImg) {
-    
+
       if (value) {
         return (
           <div style={{ width: '120px' }}>
@@ -599,6 +599,8 @@ export default function DataTable({
     <div className="space-y-4">
       <div className="flex space-x-2">
         <SearchInput
+          model={model}
+          join_statements={join_statements}
           oriSearchQuery={searchQuery}
           searchQueries={search_queries} onSearch={handleSearch} />
 
