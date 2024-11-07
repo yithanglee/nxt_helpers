@@ -5,8 +5,6 @@ import { useModel } from '@/lib/provider';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Image from "next/image"
 import { JSONTree } from 'react-json-tree';
-import { Input } from "@/components/ui/input"
-
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -14,11 +12,8 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle, DialogTrigger
+  DialogTitle,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-
 import { genInputs, postData } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
@@ -27,8 +22,7 @@ import Link from 'next/link'
 import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardFooter } from '../ui/card';
-import { Anybody } from 'next/font/google';
+import { Card, CardContent, CardFooter } from '../../../src/components/ui/card';
 
 // Assuming these are defined in your environment variables
 
@@ -50,13 +44,10 @@ interface CustomCol {
     editor?: boolean
     editor2?: boolean
     upload?: boolean
-    alt_class?: string
-    date?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
   label: string;
-  alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string | string[];
   search_queries: string[];
@@ -64,6 +55,7 @@ interface CustomSubCol {
   title_key: string;
 }
 interface DataTableProps {
+  itemsPerPage?: number
   appendQueries?: Record<any, any>
   showNew?: boolean
   showGrid?: boolean
@@ -98,7 +90,7 @@ interface DataTableProps {
 }
 
 export default function DataTable({
-
+  itemsPerPage = 100,
   appendQueries = {},
   showNew = false,
   showGrid = false,
@@ -133,7 +125,7 @@ export default function DataTable({
   const router = useRouter()
   const searchParams = useSearchParams()
   let selectedData = {};
-  const itemsPerPage = 100
+
 
   let isLoading = false, isLoading2 = false;
 
@@ -159,6 +151,7 @@ export default function DataTable({
 
   const buildSearchString = useCallback((query: any) => {
 
+    console.log(query)
 
     if (Object.keys(query).length == 0) {
       return null
@@ -191,27 +184,14 @@ export default function DataTable({
       .join('&');
   }
   const fetchData = useCallback(async (pageNumber: number) => {
-
+    console.log('is loading?...' + isLoading2);
     if (isLoading2) return; // Avoid fetching data while it's already being fetched
     isLoading2 = true;
 
-
+    console.log('already set isLoading to TRUE');
     setError(null);
-    let finalSearchQuery: Record<any, any> | string = {};
-    finalSearchQuery = searchQuery
-    console.log(finalSearchQuery)
-
-    try {
-      for (const key in finalSearchQuery) {
-        if (finalSearchQuery[key] === '') {
-          delete finalSearchQuery[key];
-        }
-      }
-
-    } catch (e) {
-      finalSearchQuery = ''
-    }
-
+    let finalSearchQuery;
+    finalSearchQuery = Object.keys(searchQuery).length == 0 ? '' : searchQuery
     const apiData = {
       search: { regex: 'false', value: finalSearchQuery },
       additional_join_statements: JSON.stringify(join_statements),
@@ -227,7 +207,7 @@ export default function DataTable({
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null);
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
-    console.info(apiData)
+    console.log(apiData)
     try {
       const response = await fetch(`${blog_url}/svt_api/${model}?${queryString}`, {
         headers: {
@@ -243,17 +223,20 @@ export default function DataTable({
       setItems(dataList.data);
       setData(dataList.data);
       setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
+      isLoading2 = false
     } catch (error) {
       console.error('An error occurred', error);
       setError('Failed to fetch data. Please try again.');
     } finally {
-      isLoading2 = true;
+      isLoading2 = false;
 
     }
   },
     [model, searchQuery, appendQueries, preloads, buildSearchString]
   );
   useEffect(() => {
+
+    console.log(currentPage)
 
     if (!isLoading2) {
       fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
@@ -321,7 +304,7 @@ export default function DataTable({
     setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
       (async () => {
-
+        console.log("Deleting item", item.id);
 
         await postData({
           method: "DELETE",
@@ -329,7 +312,7 @@ export default function DataTable({
         });
 
         await fetchData(currentPage); // Explicitly await fetchData
-
+        console.log("fetch after delete?");
         setConfirmModalOpen(false);
 
         toast({
@@ -372,7 +355,7 @@ export default function DataTable({
 
     const badgeColor = (value: string | boolean, conditionList: { key: string | boolean; value: string }[]) => {
       const result = conditionList.find(v => v.key === value)
-
+      console.log(result)
       return result ? result.value : 'destructive'
     }
 
@@ -493,16 +476,11 @@ export default function DataTable({
     }
 
     if (column.color) {
-
-      let showVal = value
-
-
-      if ([true, false].includes(value)) {
-        showVal = value ? 'Yes' : 'No'
-      }
+      console.log(column)
+      console.log(value)
       return (
         <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {showVal.replace("_", " ")}
+          {value ? 'Yes' : 'No'}
         </Badge>
       )
     }
@@ -531,10 +509,6 @@ export default function DataTable({
       return (
         <div className="hasJson">
           <JSONTree data={value}
-            shouldExpandNodeInitially={(k, d, l) => {
-
-              return false;
-            }}
             theme={{
               extend: theme,
 
@@ -553,7 +527,7 @@ export default function DataTable({
     }
 
     if (column.showImg) {
-
+      console.log(value)
       if (value) {
         return (
           <div style={{ width: '120px' }}>
@@ -601,8 +575,6 @@ export default function DataTable({
     <div className="space-y-4">
       <div className="flex space-x-2">
         <SearchInput
-          model={model}
-          join_statements={join_statements}
           oriSearchQuery={searchQuery}
           searchQueries={search_queries} onSearch={handleSearch} />
 
@@ -613,11 +585,11 @@ export default function DataTable({
       </div>
       <div className=" rounded-md border">
         {showGrid &&
-          <div className='grid grid-cols-6 gap-4'>
+          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 lg:gap-4'>
 
             {items.map((item, itemIndex) => (
 
-              <div key={itemIndex} className='p-6'>
+              <div key={itemIndex} className='col-span-1'>
                 {columns.map((column, columnIndex) => (
                   <div key={columnIndex} >
                     {column.altClass && <div className={column.altClass}>
@@ -627,6 +599,13 @@ export default function DataTable({
                   </div>
                 ))}
               </div>
+
+
+
+
+
+
+
 
 
             ))}
