@@ -42,7 +42,6 @@ const SearchInput: React.FC<SearchInputProps> = ({ model, join_statements, searc
 
                 try {
                   if (join_statements!.length > 0) {
-
                     for (let index = 0; index < join_statements!.length; index++) {
                       const element = join_statements![index];
                       dict[dictKeys[index]] = Object.keys(join_statements![index])[0]

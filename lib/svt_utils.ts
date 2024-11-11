@@ -18,7 +18,7 @@ export async function postData(postDataOptions: PostDataOptions = {}) {
         successCallback
     } = postDataOptions;
     let res;
-    let cookieToken = Cookies.get('united-v3');
+    let cookieToken = Cookies.get(PHX_COOKIE!);
     let token = cookieToken != null ? cookieToken : 'empty';
 
     let headers: Record<string, string> = {
@@ -42,7 +42,7 @@ export async function postData(postDataOptions: PostDataOptions = {}) {
         const response = await fetch(endpoint || (PHX_HTTP_PROTOCOL + PHX_ENDPOINT), requestOptions);
 
         if (response.status === 403) {
-            Cookies.remove(PHX_COOKIE);
+            Cookies.remove(PHX_COOKIE!);
             //   goto("/");
             return;
         }
