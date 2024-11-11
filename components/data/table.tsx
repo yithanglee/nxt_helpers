@@ -59,6 +59,7 @@ interface CustomSubCol {
   title_key: string;
 }
 interface DataTableProps {
+  modelPath?: string
   gridFn?: (item: any) => string
   itemsPerPage?: number
   appendQueries?: Record<any, any>
@@ -96,7 +97,7 @@ interface DataTableProps {
 
 
 export default function DataTable({
-
+  modelPath = '',
   itemsPerPage = 100,
   appendQueries = {},
   showNew = false,
@@ -384,13 +385,16 @@ export default function DataTable({
     setConfirmModalFunction(() => fn)
   }
 
-  function PaginationComponent({ totalPages }: { totalPages: number }) {
+  function PaginationComponent({ totalPages, path }: { totalPages: number, path: string }) {
     const searchParams = useSearchParams();
     const handlePaginationClick = (pageNumber: any) => {
       const currentParams = new URLSearchParams(searchParams);
       // Set or update the page_no parameter
       currentParams.set("page_no", pageNumber);
-      router.push(`/books?${currentParams.toString()}`);
+      if (path != ''){
+        router.push(`/${path}?${currentParams.toString()}`);
+      }
+  
     };
 
     const getPaginationItems = () => {
@@ -835,7 +839,7 @@ export default function DataTable({
           </Table>
         }
       </div>
-      <PaginationComponent totalPages={totalPages}></PaginationComponent>
+      <PaginationComponent path={modelPath} totalPages={totalPages}></PaginationComponent>
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>

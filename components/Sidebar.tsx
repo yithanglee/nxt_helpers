@@ -57,7 +57,7 @@ interface NavGroup {
 }
 
 
-const navGroups: NavGroup[] = [
+const defaultNavGroups: NavGroup[] = [
   {
     name: "Dashboard",
     items: [
@@ -113,7 +113,16 @@ const navGroups: NavGroup[] = [
   }
 ]
 
-export default function Sidebar() {
+interface NavGroupProps{
+  sidebarTitle: string 
+  navGroups: NavGroup[]
+}
+
+export default function Sidebar({
+sidebarTitle= 'Next Admin',
+  navGroups = defaultNavGroups,
+
+}: NavGroupProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const pathname = usePathname()
@@ -149,7 +158,7 @@ export default function Sidebar() {
       isSidebarCollapsed ? "w-16" : "w-64"
     )}>
       <div className="p-4 flex justify-between items-center">
-        {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">Jimat v4 Admin</h1>}
+        {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">{sidebarTitle}</h1>}
         <div className="flex space-x-2 items-center">
           {!isSidebarCollapsed && (
             <>
