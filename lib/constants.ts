@@ -7,7 +7,7 @@ export const PHX_WS_PROTOCOL = process.env.NEXT_PUBLIC_WS_PROTOCOL || 'wss://'; 
 export const PHX_ENDPOINT = process.env.NEXT_PUBLIC_ENDPOINT 
 
 // Cookie Names
-export const PHX_COOKIE = 'phx_cookie';  // Could make this environment-dependent if necessary
+export const PHX_COOKIE = process.env.NEXT_PUBLIC_COOKIE;  // Could make this environment-dependent if necessary
 
 // Other Constants
 export const API_VERSION = process.env.API_VERSION || 'v1';
