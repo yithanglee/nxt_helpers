@@ -23,6 +23,7 @@ import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '../../../src/components/ui/card';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../ui/pagination';
 
 // Assuming these are defined in your environment variables
 
@@ -58,6 +59,7 @@ interface CustomSubCol {
   title_key: string;
 }
 interface DataTableProps {
+  gridFn?: (item: any) => string
   itemsPerPage?: number
   appendQueries?: Record<any, any>
   showNew?: boolean
@@ -92,11 +94,14 @@ interface DataTableProps {
   }[]
 }
 
+
 export default function DataTable({
+
   itemsPerPage = 100,
   appendQueries = {},
   showNew = false,
   showGrid = false,
+  gridFn = () => { return '/' },
   canDelete = false,
   join_statements = [],
   search_queries = [],
@@ -106,7 +111,6 @@ export default function DataTable({
   customCols = [],
   columns
 }: DataTableProps) {
-
 
   const { toast } = useToast()
   const [items, setItems] = useState<any[]>([])
@@ -120,17 +124,14 @@ export default function DataTable({
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [confirmModalMessage, setConfirmModalMessage] = useState('')
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
-
   const [error, setError] = useState<string | null>(null)
-
   const [previewModal, setPreviewModal] = useState(false)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   let selectedData = {};
-
-
   let isLoading = false, isLoading2 = false;
+  let dict: Record<any, any> = {};
 
   // Fetch colInputs using genInputs inside useEffect
   useEffect(() => {
@@ -141,23 +142,39 @@ export default function DataTable({
       setColInputs(inputs);
     };
 
-
-
-    if (!isLoading) {
+    if (!isLoading && showNew ) {
+      
       fetchColInputs();
     }
 
-
-
+    const currentParams = new URLSearchParams(searchParams);
+    let qp = currentParams.get("page_no");
+    console.log(qp);
+    if (qp != "") {
+      // Set or update the page_no parameter
+      let pageNo = parseInt(qp!) || 1;
+      setCurrentPage(pageNo);
+    }
 
   }, []);
 
+
+  useEffect(() => {
+    const pageNo = searchParams.get("page_no");
+    console.log("Updated page_no:", pageNo);
+    const currentParams = new URLSearchParams(searchParams);
+    let qp = currentParams.get("page_no");
+    console.log(qp);
+    if (qp != "") {
+      // Set or update the page_no parameter
+      let pageNo = parseInt(qp!) || 1;
+      setCurrentPage(pageNo);
+    }
+  }, [searchParams]);
+
   const buildSearchString = useCallback((query: any) => {
-
-    console.log(query)
-
     if (Object.keys(query).length == 0) {
-      return null
+      return {}
     } else {
       const slist = Object.entries(query)
         .filter(([_, value]) => value)
@@ -187,15 +204,14 @@ export default function DataTable({
       .join('&');
   }
   const fetchData = useCallback(async (pageNumber: number) => {
-    console.log('is loading?...' + isLoading2);
+
     if (isLoading2) return; // Avoid fetching data while it's already being fetched
     isLoading2 = true;
 
-    console.log('already set isLoading to TRUE');
     setError(null);
-    let finalSearchQuery: Record<any, any> | string = {};
+    let finalSearchQuery: Record<any, any> = {};
     finalSearchQuery = searchQuery
-    console.log(finalSearchQuery)
+
 
     try {
       for (const key in finalSearchQuery) {
@@ -205,7 +221,8 @@ export default function DataTable({
       }
 
     } catch (e) {
-      finalSearchQuery = ''
+      console.error(e)
+
     }
     const apiData = {
       search: { regex: 'false', value: finalSearchQuery },
@@ -220,7 +237,7 @@ export default function DataTable({
       start: (pageNumber - 1) * itemsPerPage,
     };
 
-    const queryString = buildQueryString({ ...apiData, ...appendQueries }, null);
+    const queryString = buildQueryString({ ...apiData, ...appendQueries }, null).replaceAll("&&", "&");
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
     console.info(apiData)
     try {
@@ -249,15 +266,34 @@ export default function DataTable({
   },
     [model, searchQuery, appendQueries, preloads, buildSearchString]
   );
+
   useEffect(() => {
-
-    console.log(currentPage)
-
     if (!isLoading2) {
       fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
     }
   }, [currentPage, searchQuery]); // Trigger only when these states change
 
+
+  useEffect(() => {
+
+    console.log('searc h queyris')
+    console.log(search_queries)
+
+    for (let index = 0; index < search_queries.length; index++) {
+      const element = search_queries[index];
+      let singleS = element.split("|");
+      for (let index2 = 0; index2 < singleS.length; index2++) {
+        const sElement = singleS[index2];
+        if (sElement.includes("=")) {
+          if (sElement.split("=")[1] != 'undefined') {
+            dict[sElement.split("=")[0]] = sElement.split("=")[1]
+            setSearchQuery(prevQuery => ({ ...prevQuery, [sElement.split("=")[0]]: sElement.split("=")[1] }));
+
+          }
+        }
+      }
+    }
+  }, [search_queries]);
 
   // const updateUrlWithSearch = useCallback(() => {
   //   const searchParam = JSON.stringify(searchQuery)
@@ -293,6 +329,8 @@ export default function DataTable({
 
   // Modify handleSearch to include URL update
   const handleSearch = (newSearchQuery: any) => {
+    console.log('new search qur')
+    console.log(newSearchQuery)
     setSearchQuery(newSearchQuery)
     setCurrentPage(1)
     // updateUrlWithSearch()
@@ -344,6 +382,102 @@ export default function DataTable({
     setConfirmModalOpen(bool)
     setConfirmModalMessage(message)
     setConfirmModalFunction(() => fn)
+  }
+
+  function PaginationComponent({ totalPages }: { totalPages: number }) {
+    const searchParams = useSearchParams();
+    const handlePaginationClick = (pageNumber: any) => {
+      const currentParams = new URLSearchParams(searchParams);
+      // Set or update the page_no parameter
+      currentParams.set("page_no", pageNumber);
+      router.push(`/books?${currentParams.toString()}`);
+    };
+
+    const getPaginationItems = () => {
+      const paginationItems = [];
+      const rangeStart = Math.max(1, currentPage - 1);
+      const rangeEnd = Math.min(totalPages, currentPage + 1);
+
+      for (let i = rangeStart; i <= rangeEnd; i++) {
+        if (i > 0) {
+          paginationItems.push(i);
+        }
+      }
+
+      if (paginationItems.length > 0 && paginationItems.length < 3 && currentPage < totalPages) {
+        paginationItems.push(paginationItems[paginationItems.length - 1] + 1);
+      } else if (paginationItems.length > 0 && paginationItems.length < 3 && currentPage > 1) {
+        paginationItems.unshift(paginationItems[0] - 1);
+      }
+
+      return paginationItems;
+    };
+
+    return (
+      <div className="gap-4 flex flex-col lg:flex-row items-center justify-between space-x-2 mt-8  ">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                color={currentPage === 1 ? 'default' : 'ghost'}
+                onClick={() => {
+                  let prv = Math.max(currentPage - 1, 1);
+                  handlePaginationClick(prv)
+                  setCurrentPage(prv)
+                }
+                }
+              />
+            </PaginationItem>
+
+            {currentPage > 2 && (
+              <>
+                <PaginationItem>
+                  <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
+                </PaginationItem>
+                {currentPage > 3 && <PaginationEllipsis />}
+              </>
+            )}
+
+            {getPaginationItems().map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+
+                  isActive={page === currentPage}
+                  onClick={() => {
+                    setCurrentPage(page)
+                    handlePaginationClick(page)
+                  }}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+
+            {currentPage < totalPages - 1 && (
+              <>
+                {currentPage < totalPages - 2 && <PaginationEllipsis />}
+                <PaginationItem>
+                  <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
+                </PaginationItem>
+              </>
+            )}
+
+            <PaginationItem>
+              <PaginationNext
+                color={currentPage === totalPages ? 'default' : 'ghost'}
+                onClick={() => {
+                  let nxt = Math.min(currentPage + 1, totalPages);
+                  handlePaginationClick(nxt)
+                  setCurrentPage(nxt)
+                }}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
+        <span className='min-w-[100px]'>Page {currentPage} of {totalPages}</span>
+      </div>
+    );
   }
 
 
@@ -615,22 +749,19 @@ export default function DataTable({
 
             {items.map((item, itemIndex) => (
 
-              <div key={itemIndex} className='col-span-1'>
-                {columns.map((column, columnIndex) => (
-                  <div key={columnIndex} >
-                    {column.altClass && <div className={column.altClass}>
-                      {renderCell(item, column)}
-                    </div>}
-                    {!column.altClass && renderCell(item, column)}
-                  </div>
-                ))}
+              <div key={itemIndex} className='col-span-1' >
+                <Link href={gridFn(item)}>
+                  {columns.map((column, columnIndex) => (
+                    <div key={columnIndex} >
+                      {column.altClass && <div className={column.altClass}>
+                        {renderCell(item, column)}
+                      </div>}
+                      {!column.altClass && renderCell(item, column)}
+                    </div>
+                  ))}
+                </Link>
+
               </div>
-
-
-
-
-
-
 
 
 
@@ -704,23 +835,7 @@ export default function DataTable({
           </Table>
         }
       </div>
-
-      <div className="flex justify-center space-x-2">
-        <Button
-          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        <span>Page {currentPage} of {totalPages}</span>
-        <Button
-          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </div>
-
+      <PaginationComponent totalPages={totalPages}></PaginationComponent>
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>

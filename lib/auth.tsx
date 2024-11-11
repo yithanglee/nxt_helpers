@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
 import { PHX_COOKIE, PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from './constants'
 
+// lib/auth.js
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../src/lib/firebaseConfig';
+import { postData } from './svt_utils'
+
+
 interface User {
   username: string
   userStruct?: Record<any, any>
@@ -91,6 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.remove(PHX_COOKIE)
     router.push('/login')
   }
+  const forgotPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email)
+      console.log('Password reset email sent successfully')
+    } catch (error) {
+      console.error('Error sending password reset email:', error)
+      throw error // Rethrow error to handle in the calling component if needed
+    }
+  }
 
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout }}>
@@ -106,3 +121,48 @@ export function useAuth() {
   }
   return context
 }
+
+export const signUp = async (email: string, password: string) => {
+  var res = createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+    var user = userCredential.user;
+    const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
+    postData({endpoint: `${url}/svt_api/webhook`,
+      data: {
+        scope: "google_signin",
+        result: {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || user.email,
+        }
+      }
+    })
+    console.log(userCredential);
+  });
+  return res;
+};
+
+export const signIn = async (email: string, password: string) => {
+  var res = signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+    var user = userCredential.user;
+    const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
+    postData({endpoint: `${url}/svt_api/webhook`,
+      data: {
+        scope: "google_signin",
+        result: {
+          uid: user.uid,
+          email: user.email,
+          name: user.displayName || user.email,
+        }
+      }
+    })
+    console.log(userCredential);
+  });
+
+  console.log(res)
+
+  return res;
+};
+
+export const logOut = async () => {
+  return signOut(auth);
+};
