@@ -30,29 +30,31 @@ const SearchInput: React.FC<SearchInputProps> = ({ model, join_statements, searc
       {searchQueries.length > 0 &&
         searchQueries.map((sQuery) =>
           sQuery.split('|').map((singleQuery) => {
-           
+
             if (!singleQuery.includes('=')) {
               function placeholderName(): string | undefined {
-                console.log(searchQueries)
-                console.log(model)
-                console.log(join_statements)
+
                 if (join_statements == undefined) {
                   return ''
                 }
                 let dict: Record<any, any> = {}, dictKeys = ['b', 'c', 'd', 'e', 'f'], head = ''
                 dict['a'] = model
+
                 try {
                   if (join_statements!.length > 0) {
+
                     for (let index = 0; index < join_statements!.length; index++) {
                       const element = join_statements![index];
                       dict[dictKeys[index]] = Object.keys(join_statements![index])[0]
                     }
                   }
                   head = dict[singleQuery.split('.')[0]].replace("_", " ");
+
                 } catch (e) {
                   console.error(e)
                 }
                 return head + '\s ' + singleQuery.split('.')[1] + ': ' + (oriSearchQuery[singleQuery] || '')
+
               }
 
               return (
@@ -64,8 +66,8 @@ const SearchInput: React.FC<SearchInputProps> = ({ model, join_statements, searc
                 />
               );
             }
-        
-            
+
+
             return null;
           })
         )}
