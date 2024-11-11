@@ -11,12 +11,13 @@ interface SearchInputProps {
   onSearch: (query: Record<string, string>) => void;
 }
 
-const SearchInput: React.FC<SearchInputProps> = ({model, join_statements, searchQueries,oriSearchQuery, onSearch }) => {
+const SearchInput: React.FC<SearchInputProps> = ({ model, join_statements, searchQueries, oriSearchQuery, onSearch }) => {
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({});
 
   const handleInputChange = (key: string, value: string) => {
-
-    setSearchQuery(prevQuery => ({ ...prevQuery, [key]: value }));
+    console.log(oriSearchQuery)
+    console.log(searchQuery)
+    setSearchQuery(prevQuery => ({ ...prevQuery, ...oriSearchQuery, [key]: value }));
   };
 
   const handleSearch = () => {
@@ -25,58 +26,46 @@ const SearchInput: React.FC<SearchInputProps> = ({model, join_statements, search
   };
 
   return (
-    <div className="flex space-x-2">
+    <div className="flex flex-col lg:flex-row gap-4">
       {searchQueries.length > 0 &&
         searchQueries.map((sQuery) =>
           sQuery.split('|').map((singleQuery) => {
-      
+           
             if (!singleQuery.includes('=')) {
               function placeholderName(): string | undefined {
-
-
+                console.log(searchQueries)
                 console.log(model)
-
                 console.log(join_statements)
-
-                if (join_statements == undefined){
+                if (join_statements == undefined) {
                   return ''
                 }
-
-                let dict: Record<any,any> = {}, dictKeys  = ['b','c','d', 'e', 'f'], head = ''
-                dict['a'] = model 
-
+                let dict: Record<any, any> = {}, dictKeys = ['b', 'c', 'd', 'e', 'f'], head = ''
+                dict['a'] = model
                 try {
-                  if (join_statements!.length > 0){
-
+                  if (join_statements!.length > 0) {
                     for (let index = 0; index < join_statements!.length; index++) {
                       const element = join_statements![index];
                       dict[dictKeys[index]] = Object.keys(join_statements![index])[0]
-                      
                     }
-
-               
                   }
                   head = dict[singleQuery.split('.')[0]].replace("_", " ");
-             
-                }catch(e){
-
+                } catch (e) {
                   console.error(e)
-
                 }
-                
-
-               return head + '\s ' +  singleQuery.split('.')[1] + ': ' +  (oriSearchQuery[singleQuery] || '')
+                return head + '\s ' + singleQuery.split('.')[1] + ': ' + (oriSearchQuery[singleQuery] || '')
               }
 
               return (
                 <Input
                   key={singleQuery}
-                  placeholder={placeholderName() }
+                  placeholder={placeholderName()}
                   value={searchQuery[singleQuery] || ''}
                   onChange={(e) => handleInputChange(singleQuery, e.target.value)}
                 />
               );
             }
+        
+            
             return null;
           })
         )}
