@@ -24,6 +24,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '../../../src/components/ui/card';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../ui/pagination';
+import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 // Assuming these are defined in your environment variables
 
@@ -88,6 +89,7 @@ interface DataTableProps {
     showImg?: boolean
     showJson?: boolean
     showPreview?: boolean
+
     showDateTime?: boolean
     color?: { key: string | boolean, value: string }[]
     through?: string[]
@@ -97,6 +99,7 @@ interface DataTableProps {
 
 
 export default function DataTable({
+
   modelPath = '',
   itemsPerPage = 100,
   appendQueries = {},
@@ -143,8 +146,8 @@ export default function DataTable({
       setColInputs(inputs);
     };
 
-    if (!isLoading && showNew ) {
-      
+    if (!isLoading && showNew) {
+
       fetchColInputs();
     }
 
@@ -391,10 +394,10 @@ export default function DataTable({
       const currentParams = new URLSearchParams(searchParams);
       // Set or update the page_no parameter
       currentParams.set("page_no", pageNumber);
-      if (path != ''){
+      if (path != '') {
         router.push(`/${path}?${currentParams.toString()}`);
       }
-  
+
     };
 
     const getPaginationItems = () => {
@@ -508,7 +511,7 @@ export default function DataTable({
 
     const badgeColor = (value: string | boolean, conditionList: { key: string | boolean; value: string }[]) => {
       const result = conditionList.find(v => v.key === value)
-      console.log(result)
+
       return result ? result.value : 'destructive'
     }
 
@@ -533,6 +536,31 @@ export default function DataTable({
             } else {
               return <ImageIcon></ImageIcon>
             }
+          }
+
+          if (column.showPreview) {
+            return (<>
+              <Button
+                onClick={() => {
+
+                  setImgUrl(`${url}${data[through[0]][0][val]}`)
+                  setPreviewModal(true)
+                }}
+                disabled={false}
+              >
+                <MagnifyingGlassIcon></MagnifyingGlassIcon>
+              </Button>
+              <Dialog open={previewModal} onOpenChange={setPreviewModal}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Preview</DialogTitle>
+                  </DialogHeader>
+                  {data[through[0]][0][val] && (
+                    <Image src={imgUrl!} alt="Preview" width={1200} height={700} />
+                  )}
+                </DialogContent>
+              </Dialog>
+            </>)
           }
 
           return data[through[0]][val]
@@ -590,31 +618,7 @@ export default function DataTable({
       )
     }
 
-    if (column.showPreview) {
-      return (
-        <>
-          <Button
-            onClick={() => {
-              setImgUrl(value)
-              setPreviewModal(true)
-            }}
-            disabled={!value}
-          >
-            Preview
-          </Button>
-          <Dialog open={previewModal} onOpenChange={setPreviewModal}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Preview</DialogTitle>
-              </DialogHeader>
-              {imgUrl && (
-                <Image src={`${url}${imgUrl}`} alt="Preview" width={1200} height={700} />
-              )}
-            </DialogContent>
-          </Dialog>
-        </>
-      )
-    }
+
 
     if (column.formatDate) {
       return formatDate(value, column.offset)
@@ -712,6 +716,32 @@ export default function DataTable({
 
     }
 
+    if (column.showPreview) {
+      return (
+        <>
+          <Button
+            onClick={() => {
+              setImgUrl(value)
+              setPreviewModal(true)
+            }}
+            disabled={!value}
+          >
+            Preview
+          </Button>
+          <Dialog open={previewModal} onOpenChange={setPreviewModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Preview</DialogTitle>
+              </DialogHeader>
+              {imgUrl && (
+                <Image src={`${url}${imgUrl}`} alt="Preview" width={1200} height={700} />
+              )}
+            </DialogContent>
+          </Dialog>
+        </>
+      )
+    }
+
     if (column.isBadge) {
       return (
         <Badge className="capitalize" variant="default">
@@ -774,25 +804,25 @@ export default function DataTable({
           </div>}
 
         {!showGrid &&
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead key={index}>{column.label}</TableHead>
-                ))}
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <div>
+            <div className='lg:hidden '>
+
               {items.map((item, itemIndex) => (
-                <TableRow key={itemIndex}>
+                <Card key={itemIndex} className='p-0 mb-2'>
+                  <div className='grid grid-flow-row auto-rows-max p-4'>
                   {columns.map((column, columnIndex) => (
-                    <TableCell key={columnIndex}>
-                      {renderCell(item, column)}
-                    </TableCell>
-                  ))}
-                  <TableCell>
-                    <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                   
+                   <CardContent className='p-0 ' key={columnIndex}>
+                     {item[column.data] != "" && column.altClass && <div className={column.altClass}>
+                       {renderCell(item, column)}
+                     </div>}
+                     {!column.altClass && renderCell(item, column)}
+                   </CardContent>
+                 ))}
+                  </div>
+                 
+                  <CardFooter className='p-4'>
+                    <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>
                     {buttons.map((button, buttonIndex) => {
                       if (button.showCondition && !button.showCondition(item)) {
                         return null;
@@ -832,11 +862,82 @@ export default function DataTable({
                     {canDelete && (
                       <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
                     )}
-                  </TableCell>
-                </TableRow>
+                  </CardFooter>
+                </Card>
               ))}
-            </TableBody>
-          </Table>
+
+            </div>
+            <div className='hidden lg:block w-full'>
+            <Table className=''>
+              <TableHeader>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableHead key={index}>{column.label}</TableHead>
+                  ))}
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item, itemIndex) => (
+                  <TableRow key={itemIndex}>
+                    {columns.map((column, columnIndex) => (
+                      <TableCell key={columnIndex}>
+                        {column.altClass && <div className={column.altClass}>
+                          {renderCell(item, column)}
+                        </div>}
+                        {!column.altClass && renderCell(item, column)}
+                      </TableCell>
+                    ))}
+                    <TableCell>
+                      <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                      {buttons.map((button, buttonIndex) => {
+                        if (button.showCondition && !button.showCondition(item)) {
+                          return null;
+                        }
+
+                        const buttonProps = {
+                          key: buttonIndex,
+                          variant: "ghost" as const,
+                          onClick: button.onclickFn
+                            ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                            : undefined
+                        };
+
+                        const buttonContent = <span>{button.name}</span>;
+
+                        if (button.href) {
+                          const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                          return (
+                            <Button asChild {...buttonProps}>
+                              <Link href={href}>
+                                {buttonContent}
+                              </Link>
+                            </Button>
+                          );
+                        }
+
+                        return (
+                          <Button {...buttonProps}>
+                            {buttonContent}
+                          </Button>
+                        );
+                      })}
+
+
+
+
+                      {canDelete && (
+                        <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            </div>
+            
+          </div>
+
         }
       </div>
       <PaginationComponent path={modelPath} totalPages={totalPages}></PaginationComponent>
