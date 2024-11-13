@@ -123,8 +123,8 @@ export function useAuth() {
 }
 
 export const signUp = async (email: string, password: string) => {
-  var res = createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
-    var user = userCredential.user;
+  let res = createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+    let user = userCredential.user;
     const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
     postData({endpoint: `${url}/svt_api/webhook`,
       data: {
@@ -142,8 +142,8 @@ export const signUp = async (email: string, password: string) => {
 };
 
 export const signIn = async (email: string, password: string) => {
-  var res = signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-    var user = userCredential.user;
+  let res = signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+    let user = userCredential.user;
     const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
     postData({endpoint: `${url}/svt_api/webhook`,
       data: {

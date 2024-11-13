@@ -91,7 +91,7 @@ export async function populateData({
                 throw new Error('API request failed');
             }
 
-            var dataList = await response.json();
+            let dataList = await response.json();
             return dataList;
 
         } catch (error) {
