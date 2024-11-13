@@ -101,7 +101,7 @@ interface DataTableProps {
 export default function DataTable({
 
   modelPath = '',
-  itemsPerPage = 100,
+  itemsPerPage = 20,
   appendQueries = {},
   showNew = false,
   showGrid = false,
@@ -538,7 +538,7 @@ export default function DataTable({
             }
           }
 
-          if (column.showPreview) {
+          if (column.showPreview && data[through[0]].length > 0) {
             return (<>
               <Button
                 onClick={() => {
@@ -550,14 +550,18 @@ export default function DataTable({
               >
                 <MagnifyingGlassIcon></MagnifyingGlassIcon>
               </Button>
-              <Dialog open={previewModal} onOpenChange={setPreviewModal}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Preview</DialogTitle>
-                  </DialogHeader>
+              <Dialog open={previewModal} onOpenChange={setPreviewModal} aria-labelledby="dialog-title" aria-describedby="dialog-description">
+                <DialogContent >
+                  <DialogTitle>
+                    <h2 id="dialog-title">Image</h2>
+                  </DialogTitle>
+                  <DialogDescription>
+                    <p id="dialog-description">Preview</p>
+                  </DialogDescription>
                   {data[through[0]][0][val] && (
                     <Image src={imgUrl!} alt="Preview" width={1200} height={700} />
                   )}
+
                 </DialogContent>
               </Dialog>
             </>)
@@ -728,8 +732,11 @@ export default function DataTable({
           >
             Preview
           </Button>
-          <Dialog open={previewModal} onOpenChange={setPreviewModal}>
-            <DialogContent>
+          <Dialog open={previewModal} onOpenChange={setPreviewModal} aria-labelledby="dialog-title" aria-describedby="dialog-description">
+            <DialogContent
+              aria-describedby={imgUrl!}
+              aria-description={imgUrl!}
+            >
               <DialogHeader>
                 <DialogTitle>Preview</DialogTitle>
               </DialogHeader>
@@ -810,17 +817,17 @@ export default function DataTable({
               {items.map((item, itemIndex) => (
                 <Card key={itemIndex} className='p-0 mb-2'>
                   <div className='grid grid-flow-row auto-rows-max p-4'>
-                  {columns.map((column, columnIndex) => (
-                   
-                   <CardContent className='p-0 ' key={columnIndex}>
-                     {item[column.data] != "" && column.altClass && <div className={column.altClass}>
-                       {renderCell(item, column)}
-                     </div>}
-                     {!column.altClass && renderCell(item, column)}
-                   </CardContent>
-                 ))}
+                    {columns.map((column, columnIndex) => (
+
+                      <CardContent className='p-0 ' key={columnIndex}>
+                        {item[column.data] != "" && column.altClass && <div className={column.altClass}>
+                          {renderCell(item, column)}
+                        </div>}
+                        {!column.altClass && renderCell(item, column)}
+                      </CardContent>
+                    ))}
                   </div>
-                 
+
                   <CardFooter className='p-4'>
                     <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>
                     {buttons.map((button, buttonIndex) => {
@@ -868,74 +875,74 @@ export default function DataTable({
 
             </div>
             <div className='hidden lg:block w-full'>
-            <Table className=''>
-              <TableHeader>
-                <TableRow>
-                  {columns.map((column, index) => (
-                    <TableHead key={index}>{column.label}</TableHead>
-                  ))}
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((item, itemIndex) => (
-                  <TableRow key={itemIndex}>
-                    {columns.map((column, columnIndex) => (
-                      <TableCell key={columnIndex}>
-                        {column.altClass && <div className={column.altClass}>
-                          {renderCell(item, column)}
-                        </div>}
-                        {!column.altClass && renderCell(item, column)}
-                      </TableCell>
+              <Table className=''>
+                <TableHeader>
+                  <TableRow>
+                    {columns.map((column, index) => (
+                      <TableHead key={index}>{column.label}</TableHead>
                     ))}
-                    <TableCell>
-                      <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
-                      {buttons.map((button, buttonIndex) => {
-                        if (button.showCondition && !button.showCondition(item)) {
-                          return null;
-                        }
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((item, itemIndex) => (
+                    <TableRow key={itemIndex}>
+                      {columns.map((column, columnIndex) => (
+                        <TableCell key={columnIndex}>
+                          {column.altClass && <div className={column.altClass}>
+                            {renderCell(item, column)}
+                          </div>}
+                          {!column.altClass && renderCell(item, column)}
+                        </TableCell>
+                      ))}
+                      <TableCell>
+                        <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                        {buttons.map((button, buttonIndex) => {
+                          if (button.showCondition && !button.showCondition(item)) {
+                            return null;
+                          }
 
-                        const buttonProps = {
-                          key: buttonIndex,
-                          variant: "ghost" as const,
-                          onClick: button.onclickFn
-                            ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
-                            : undefined
-                        };
+                          const buttonProps = {
+                            key: buttonIndex,
+                            variant: "ghost" as const,
+                            onClick: button.onclickFn
+                              ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                              : undefined
+                          };
 
-                        const buttonContent = <span>{button.name}</span>;
+                          const buttonContent = <span>{button.name}</span>;
 
-                        if (button.href) {
-                          const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                          if (button.href) {
+                            const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                            return (
+                              <Button asChild {...buttonProps}>
+                                <Link href={href}>
+                                  {buttonContent}
+                                </Link>
+                              </Button>
+                            );
+                          }
+
                           return (
-                            <Button asChild {...buttonProps}>
-                              <Link href={href}>
-                                {buttonContent}
-                              </Link>
+                            <Button {...buttonProps}>
+                              {buttonContent}
                             </Button>
                           );
-                        }
-
-                        return (
-                          <Button {...buttonProps}>
-                            {buttonContent}
-                          </Button>
-                        );
-                      })}
+                        })}
 
 
 
 
-                      {canDelete && (
-                        <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                        {canDelete && (
+                          <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            
+
           </div>
 
         }
