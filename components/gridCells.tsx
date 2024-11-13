@@ -1,9 +1,9 @@
 "use client"
 import { useRef, useEffect, useState } from "react";
 import jspreadsheet from "jspreadsheet-ce";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { Download, Save, Upload } from "lucide-react";
-import { Input } from "./ui/input";
+import { Input } from "@/components/ui/input";
 import 'jspreadsheet-ce/dist/jspreadsheet.css'
 import { postData } from "@/lib/svt_utils";
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from "@/lib/constants";
