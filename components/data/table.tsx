@@ -22,8 +22,8 @@ import Link from 'next/link'
 import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardFooter } from '../../../src/components/ui/card';
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '../ui/pagination';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 
 // Assuming these are defined in your environment variables
