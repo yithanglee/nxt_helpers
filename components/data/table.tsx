@@ -411,9 +411,9 @@ export default function DataTable({
         }
       }
 
-      if (paginationItems.length > 0 && paginationItems.length < 3 && currentPage < totalPages) {
+      if (paginationItems.length > 0 && currentPage < totalPages - 1) {
         paginationItems.push(paginationItems[paginationItems.length - 1] + 1);
-      } else if (paginationItems.length > 0 && paginationItems.length < 3 && currentPage > 1) {
+      }  else if (paginationItems.length > 0 && currentPage > 1){
         paginationItems.unshift(paginationItems[0] - 1);
       }
 
@@ -421,68 +421,71 @@ export default function DataTable({
     };
 
     return (
-      <div className="gap-4 flex flex-col lg:flex-row items-center justify-between space-x-2 mt-8  ">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious
-                color={currentPage === 1 ? 'default' : 'ghost'}
-                onClick={() => {
-                  let prv = Math.max(currentPage - 1, 1);
-                  handlePaginationClick(prv)
-                  setCurrentPage(prv)
-                }
-                }
-              />
-            </PaginationItem>
-
-            {currentPage > 2 && (
-              <>
-                <PaginationItem>
-                  <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
-                </PaginationItem>
-                {currentPage > 3 && <PaginationEllipsis />}
-              </>
-            )}
-
-            {getPaginationItems().map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-
-                  isActive={page === currentPage}
+      <div className="gap-4 flex flex-col lg:flex-row items-center justify-between  mt-8  ">
+        <div>
+          <Pagination >
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  color={currentPage === 1 ? 'default' : 'ghost'}
                   onClick={() => {
-                    setCurrentPage(page)
-                    handlePaginationClick(page)
-                  }}
-                >
-                  {page}
-                </PaginationLink>
+                    let prv = Math.max(currentPage - 1, 1);
+                    handlePaginationClick(prv)
+                    setCurrentPage(prv)
+                  }
+                  }
+                />
               </PaginationItem>
-            ))}
 
-            {currentPage < totalPages - 1 && (
-              <>
-                {currentPage < totalPages - 2 && <PaginationEllipsis />}
-                <PaginationItem>
-                  <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
+              {currentPage > 2 && (
+                <>
+                  <PaginationItem>
+                    <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
+                  </PaginationItem>
+                  {currentPage > 3 && <PaginationEllipsis />}
+                </>
+              )}
+
+              {getPaginationItems().filter((v) => v > 0).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+
+                    isActive={page === currentPage}
+                    onClick={() => {
+                      setCurrentPage(page)
+                      handlePaginationClick(page)
+                    }}
+                  > 
+                    {page}
+                  </PaginationLink>
                 </PaginationItem>
-              </>
-            )}
+              ))}
 
-            <PaginationItem>
-              <PaginationNext
-                color={currentPage === totalPages ? 'default' : 'ghost'}
-                onClick={() => {
-                  let nxt = Math.min(currentPage + 1, totalPages);
-                  handlePaginationClick(nxt)
-                  setCurrentPage(nxt)
-                }}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              {currentPage < totalPages - 1 && (
+                <>
+                  {currentPage < totalPages - 2 && <PaginationEllipsis />}
+                  <PaginationItem>
+                    <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
 
-        <span className='min-w-[100px]'>Page {currentPage} of {totalPages}</span>
+              <PaginationItem>
+                <PaginationNext
+                  color={currentPage === totalPages ? 'default' : 'ghost'}
+                  onClick={() => {
+                    let nxt = Math.min(currentPage + 1, totalPages);
+                    handlePaginationClick(nxt)
+                    setCurrentPage(nxt)
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+
+
+        <span className='w-[200px]'>Page {currentPage} of {totalPages}</span>
       </div>
     );
   }
@@ -528,8 +531,8 @@ export default function DataTable({
                   className="rounded-lg"
                   src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
                   alt={`Image for ${column.data}`}
-                  width={160}
-                  height={120}
+                  width={60}
+                  height={30}
                 />
 
               )

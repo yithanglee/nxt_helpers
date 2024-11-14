@@ -43,6 +43,7 @@ import {
   Users
 } from 'lucide-react'
 import { usePhoenixChannel } from '@/lib/usePhoenixChannel'
+import { useLogin } from '@/lib/useLogin'
 
 interface NavItem {
   name: string
@@ -113,16 +114,17 @@ const defaultNavGroups: NavGroup[] = [
   }
 ]
 
-interface NavGroupProps{
-  sidebarTitle: string 
+interface NavGroupProps {
+  sidebarTitle: string
   navGroups: NavGroup[]
 }
 
 export default function Sidebar({
-sidebarTitle= 'Next Admin',
+  sidebarTitle = 'Next Admin',
   navGroups = defaultNavGroups,
 
 }: NavGroupProps) {
+  const { handleLogout, error } = useLogin()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const pathname = usePathname()
@@ -162,7 +164,7 @@ sidebarTitle= 'Next Admin',
         <div className="flex space-x-2 items-center">
           {!isSidebarCollapsed && (
             <>
-              
+
               {isConnected ? (
                 <WifiIcon className="h-4 w-4 text-green-500" />
               ) : (
@@ -223,6 +225,30 @@ sidebarTitle= 'Next Admin',
               </ul>
             </div>
           ))}
+
+          <ul className=' "space-y-1 py-2"'>
+            <li key={'logout'}>
+              <Button variant={'ghost'}
+                onClick={() => {
+                  handleLogout()
+                }}
+                className={cn(
+                  "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                  pathname === '/login'
+                    ? "bg-gray-200 text-gray-900"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                  isSidebarCollapsed ? "justify-center" : "justify-between"
+                )}
+              >
+                <div className="flex items-center">
+                  <LogOut className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                  {!isSidebarCollapsed && <span>{'logout'}</span>}
+                </div>
+
+              </Button>
+            </li>
+          </ul>
+
         </div>
       </ScrollArea>
     </nav>
