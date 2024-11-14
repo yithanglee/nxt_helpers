@@ -24,6 +24,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (userData: User) => void
   logout: () => void
+  forgotPassword: (email: string) => Promise<void> 
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -98,17 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
   const forgotPassword = async (email: string) => {
-    try {
-      await sendPasswordResetEmail(auth, email)
-      console.log('Password reset email sent successfully')
-    } catch (error) {
-      console.error('Error sending password reset email:', error)
-      throw error // Rethrow error to handle in the calling component if needed
-    }
+  
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, forgotPassword }}>
       {children}
     </AuthContext.Provider>
   )
@@ -162,6 +157,18 @@ export const signIn = async (email: string, password: string) => {
 
   return res;
 };
+
+export const forgotPassword = async(email: string ) => {
+  try {
+    let res =   await sendPasswordResetEmail(auth, email)
+    console.log('Password reset email sent successfully')
+
+    return res ; 
+  } catch (error) {
+    console.error('Error sending password reset email:', error)
+    throw error // Rethrow error to handle in the calling component if needed
+  }
+}
 
 export const logOut = async () => {
   return signOut(auth);

@@ -531,7 +531,7 @@ export default function DataTable({
                   className="rounded-lg"
                   src={`${url}${data[through[0]][0][val] ? data[through[0]][0][val] : '/'}`}
                   alt={`Image for ${column.data}`}
-                  width={60}
+                  width={140}
                   height={30}
                 />
 
