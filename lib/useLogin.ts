@@ -36,7 +36,7 @@ export function useLogin() {
         },
         body: JSON.stringify({ token: turnstileToken }),
       })
-
+      console.log(turnstileResponse)
       if (!turnstileResponse.ok) {
         throw new Error('Turnstile verification failed')
       }
