@@ -61,6 +61,10 @@ async function requestNotificationPermission() {
 
       if (currentToken) {
         await saveTokenToServer(currentToken);
+        new Notification("Custom Notification", {
+          body: "This is shown while the app is open.",
+       
+        });
         return currentToken;
       }
     }
