@@ -17,7 +17,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-let messaging = null;
+let messaging:any = null;
 
 // Initialize messaging only on the client side and after service worker registration
 if (typeof window !== 'undefined') {
@@ -82,7 +82,7 @@ function onMessageListener() {
   });
 }
 
-async function saveTokenToServer(token) {
+async function saveTokenToServer(token: string) {
   try {
     console.log("Checking existing user...");
     const storedCookie = Cookies.get(PHX_COOKIE);
