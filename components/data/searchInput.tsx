@@ -32,7 +32,7 @@ const SearchInput: React.FC<SearchInputProps> = ({ model, join_statements, searc
           sQuery.split('|').map((singleQuery) => {
 
             if (!singleQuery.includes('=')) {
-              function placeholderName(): string | undefined {
+              const placeholderName = (): string | undefined => {
 
                 if (join_statements == undefined) {
                   return ''

@@ -46,13 +46,13 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   const key = typeof keyName === 'string' ? { label: keyName } : keyName
   const inputKey = input?.key || (typeof keyName === 'string' ? keyName : keyName.label)
-  let value = data ? data[inputKey] :  '';
+  let value = data ? data[inputKey] : '';
 
   if (inputKey.includes(".")) {
     let inputKeys = inputKey.split(".")
     try {
       value = data[inputKeys[0]][inputKeys[1]]
-    } catch(e){
+    } catch (e) {
 
     }
 
@@ -77,7 +77,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
   }, [module])
 
   const handleChange = useCallback((newValue: any) => {
-   
+
     onChange(inputKey, newValue)
   }, [inputKey, onChange])
 
@@ -114,7 +114,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           <span className="capitalize">{altName}</span>
           <Input
             type="date"
-          
+
             name={inputName(inputKey)}
             value={value || ''}
             onChange={(e) => handleChange(e.target.value)}
@@ -278,7 +278,7 @@ interface DynamicFormProps {
 
 export default function DynamicForm({ data, inputs, customCols, module, postFn, showNew = false, style }: DynamicFormProps) {
   const { user, logout } = useAuth()
-  let {toast}  = useToast()
+  let { toast } = useToast()
   const [formData, setFormData] = useState(data)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState('')
@@ -293,7 +293,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     setFormData((prevData: any) => {
       // Split the key by '.' to check if it refers to a nested property
       const keys = key.split('.');
-      
+
       if (keys.length === 1) {
         // If there is no dot, it's a top-level property
         return { ...prevData, [key]: value };
@@ -310,7 +310,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       }
     });
   }, []);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const form = e.target as HTMLFormElement
@@ -335,25 +335,28 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
         toast({
           title: "Action Completed",
           description: "Your action was successful!",
-      })
+        })
       } else {
         console.error('Form submission failed')
         toast({
           title: "Something went wrong!",
           description: "Your action was unsuccessful!",
-      })
+        })
       }
     } catch (error) {
       console.error('An error occurred during form submission:', error)
     }
   }
-
+  useEffect(() => {
+   
+    setFormData(data)
+  }, [])
   const renderForm = () => (
+
     <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
-      <h3 className="hidden mb-4 text-xl font-medium text-gray-900 dark:text-white">{module} Form</h3>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList>
+        <TabsList >
           {customCols.map((col) => (
             <TabsTrigger key={col.title} value={col.title}>
               <div className="flex items-center gap-2">
@@ -380,10 +383,15 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
           </TabsContent>
         ))}
       </Tabs>
+      <div >
+        <Button className="ml-3" type="submit">Submit</Button>
+      </div>
 
-      <Button type="submit">Submit</Button>
     </form>
   )
+
+  console.log("rendering form...")
+  console.log(formData)
 
   if (style === null) {
     return (

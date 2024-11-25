@@ -115,12 +115,14 @@ const defaultNavGroups: NavGroup[] = [
 ]
 
 interface NavGroupProps {
-  sidebarTitle: string
+  sidebarTitle: string,
+  sidebarSubtitle: string
   navGroups: NavGroup[]
 }
 
 export default function Sidebar({
   sidebarTitle = 'Next Admin',
+  sidebarSubtitle = 'Dashboard',
   navGroups = defaultNavGroups,
 
 }: NavGroupProps) {
@@ -160,7 +162,8 @@ export default function Sidebar({
       isSidebarCollapsed ? "w-16" : "w-64"
     )}>
       <div className="p-4 flex justify-between items-center">
-        {!isSidebarCollapsed && <h1 className="text-2xl font-bold text-gray-800">{sidebarTitle}</h1>}
+        {!isSidebarCollapsed &&
+          <><div className='flex flex-col'><h1 className="text-2xl font-bold text-gray-800">{sidebarTitle}</h1><div className='text-xs text-gray-500'>{sidebarSubtitle}</div></div></>}
         <div className="flex space-x-2 items-center">
           {!isSidebarCollapsed && (
             <>

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { Socket, Channel } from 'phoenix'
 import { PHX_ENDPOINT, PHX_WS_PROTOCOL } from './constants'
 
+let socket: Socket | null = null
+
 interface CountData {
     [key: string]: number
 }
@@ -10,10 +12,12 @@ interface CountData {
 export function usePhoenixChannel() {
     const [counts, setCounts] = useState<CountData>({})
     const [isConnected, setIsConnected] = useState(false)
-    const url = PHX_ENDPOINT
+
     useEffect(() => {
-        const socket = new Socket(`${PHX_WS_PROTOCOL}${url}/socket`)
-        socket.connect()
+        if (!socket) {
+            socket = new Socket(`${PHX_WS_PROTOCOL}${PHX_ENDPOINT}/socket`)
+            socket.connect()
+        }
 
         const channel = socket.channel('user:sidebar', {})
 
@@ -39,9 +43,8 @@ export function usePhoenixChannel() {
         return () => {
             clearInterval(pingInterval)
             channel.leave()
-            socket.disconnect()
         }
-    }, [])
+    }, []) // Dependency array ensures this runs only once.
 
     return { counts, isConnected }
 }

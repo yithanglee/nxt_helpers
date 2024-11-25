@@ -1,6 +1,6 @@
 // You may need to install js-cookie if not already in your project
 import Cookies from 'js-cookie';
-import { PHX_HTTP_PROTOCOL, PHX_ENDPOINT, PHX_COOKIE } from '../lib/constants';
+import { PHX_HTTP_PROTOCOL, PHX_ENDPOINT, PHX_COOKIE } from './constants';
 interface PostDataOptions {
     data?: any;
     method?: string;

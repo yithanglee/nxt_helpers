@@ -25,6 +25,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
+import { DialogOverlay } from '@radix-ui/react-dialog';
 
 // Assuming these are defined in your environment variables
 
@@ -73,7 +74,17 @@ interface DataTableProps {
   preloads?: string[] | Record<any, any>
   buttons?: {
     name: string
-    onclickFn: (item: any, refreshData: () => void, confirmModalFn: (bool: boolean, message: string, fn: () => void, opts?: any) => void) => void
+    onclickFn: (
+      item: any, 
+      name: string,
+      refreshData: () => void, 
+      confirmModalFn: (
+        bool: boolean, 
+        message: string, 
+        fn: () => void, 
+        opts?: any) => void,
+        
+        ) => void
     href?: (item: any) => string
     showCondition?: (item: any) => boolean
   }[]
@@ -413,7 +424,7 @@ export default function DataTable({
 
       if (paginationItems.length > 0 && currentPage < totalPages - 1) {
         paginationItems.push(paginationItems[paginationItems.length - 1] + 1);
-      }  else if (paginationItems.length > 0 && currentPage > 1){
+      } else if (paginationItems.length > 0 && currentPage > 1) {
         paginationItems.unshift(paginationItems[0] - 1);
       }
 
@@ -455,7 +466,7 @@ export default function DataTable({
                       setCurrentPage(page)
                       handlePaginationClick(page)
                     }}
-                  > 
+                  >
                     {page}
                   </PaginationLink>
                 </PaginationItem>
@@ -831,7 +842,7 @@ export default function DataTable({
                     ))}
                   </div>
 
-                  <CardFooter className='p-4'>
+                  <CardFooter className='p-4 overflow-x-scroll w-100'>
                     <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>
                     {buttons.map((button, buttonIndex) => {
                       if (button.showCondition && !button.showCondition(item)) {
@@ -842,7 +853,7 @@ export default function DataTable({
                         key: buttonIndex,
                         variant: "ghost" as const,
                         onClick: button.onclickFn
-                          ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                          ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
                           : undefined
                       };
 
@@ -909,7 +920,7 @@ export default function DataTable({
                             key: buttonIndex,
                             variant: "ghost" as const,
                             onClick: button.onclickFn
-                              ? () => button.onclickFn!(item, () => fetchData(currentPage), confirmModalFn)
+                              ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
                               : undefined
                           };
 
@@ -952,7 +963,8 @@ export default function DataTable({
       </div>
       <PaginationComponent path={modelPath} totalPages={totalPages}></PaginationComponent>
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+
+        <DialogContent className=''>
           <DialogHeader>
             <DialogTitle>Edit Item</DialogTitle>
           </DialogHeader>
@@ -963,6 +975,8 @@ export default function DataTable({
 
           />
         </DialogContent>
+
+
       </Dialog>
 
       <Dialog open={confirmModalOpen} onOpenChange={

@@ -5,6 +5,7 @@ import Cookies from 'js-cookie'
 import { PHX_COOKIE, PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from './constants'
 import { useToast } from '@/hooks/use-toast'
 
+
 async function postData(data: any, options: { endpoint: string }) {
   const response = await fetch(options.endpoint, {
     method: 'POST',
