@@ -8,6 +8,8 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { OnlineStatusContainer } from '@/components/data/onlineStatus'
+
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -161,21 +163,34 @@ export default function Sidebar({
       "bg-white shadow-md transition-all duration-300 flex flex-col",
       isSidebarCollapsed ? "w-16" : "w-64"
     )}>
+
       <div className="p-4 flex justify-between items-center">
         {!isSidebarCollapsed &&
-          <><div className='flex flex-col'><h1 className="text-2xl font-bold text-gray-800">{sidebarTitle}</h1><div className='text-xs text-gray-500'>{sidebarSubtitle}</div></div></>}
+          <>
+
+
+            <OnlineStatusContainer isOnline={isConnected} className='w-full flex flex-col'>
+              <h1 className="text-lg font-bold text-gray-800">{sidebarTitle}</h1>
+              <div className='text-xs text-gray-500'>{sidebarSubtitle}</div>
+            
+            </OnlineStatusContainer>
+
+
+          </>}
         <div className="flex space-x-2 items-center">
           {!isSidebarCollapsed && (
             <>
-
-              {isConnected ? (
+              {/* {isConnected ? (
                 <WifiIcon className="h-4 w-4 text-green-500" />
               ) : (
                 <WifiOffIcon className="h-4 w-4 text-red-500" />
-              )}
+              )} */}
+
+
+{/* 
               <Button variant="ghost" size="icon" onClick={toggleAllGroups}>
                 {collapsedGroups.length === navGroups.length ? <ExpandIcon className="h-4 w-4" /> : <ListCollapseIcon className="h-4 w-4" />}
-              </Button>
+              </Button> */}
             </>
           )}
           <Button variant="ghost" size="icon" onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
