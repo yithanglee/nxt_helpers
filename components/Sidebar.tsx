@@ -160,8 +160,9 @@ export default function Sidebar({
 
   return (
     <nav className={cn(
-      "bg-white shadow-md transition-all duration-300 flex flex-col",
-      isSidebarCollapsed ? "w-16" : "w-64"
+      "z-50 bg-white shadow-md transition-all duration-300 flex flex-col",
+      isSidebarCollapsed ? "w-16" : "w-64",
+ 
     )}>
       <div className="p-4 flex justify-between items-center">
         {!isSidebarCollapsed &&
@@ -185,7 +186,7 @@ export default function Sidebar({
         </div>
       </div>
       <ScrollArea className="flex-grow">
-        <div className="space-y-4 p-4">
+        <div className={cn("space-y-4 ", !isSidebarCollapsed ? "lg:p-4" : "")}>
           {navGroups.map((group, groupIndex) => (
             <div key={group.name}>
               {groupIndex > 0 && <Separator className="my-2" />}
