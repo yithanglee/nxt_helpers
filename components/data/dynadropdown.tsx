@@ -138,6 +138,7 @@ export default function DynamicDropdown({
   }, [selection, fetchData])
 
   useEffect(() => {
+    console.log(input)
     if (typeof selection === 'string') {
       const selectedItem = data[input.key.replace('_id', '')]
       if (selectedItem && selectedItem[title_key]) {
@@ -150,7 +151,7 @@ export default function DynamicDropdown({
     } else {
       setTitle(data[input.key] || 'Selected')
     }
-  }, [data, input.key, title_key, selection])
+  }, [data, input, title_key, selection])
 
   return (
     <div>

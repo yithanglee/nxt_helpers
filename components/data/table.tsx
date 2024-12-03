@@ -68,6 +68,7 @@ interface DataTableProps {
   showNew?: boolean
   showGrid?: boolean
   canDelete?: boolean
+  canEdit?: boolean
   search_queries?: string[]
   join_statements?: Record<any, any>
   model: string
@@ -118,6 +119,7 @@ export default function DataTable({
   showGrid = false,
   gridFn = () => { return '/' },
   canDelete = false,
+  canEdit = true,
   join_statements = [],
   search_queries = [],
   model,
@@ -843,7 +845,7 @@ export default function DataTable({
                   </div>
 
                   <CardFooter className='p-4 overflow-x-scroll w-100'>
-                    <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>
+                    {canEdit && <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>}
                     {buttons.map((button, buttonIndex) => {
                       if (button.showCondition && !button.showCondition(item)) {
                         return null;
@@ -910,7 +912,7 @@ export default function DataTable({
                         </TableCell>
                       ))}
                       <TableCell>
-                        <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                        {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>}
                         {buttons.map((button, buttonIndex) => {
                           if (button.showCondition && !button.showCondition(item)) {
                             return null;
