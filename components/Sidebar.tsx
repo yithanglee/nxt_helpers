@@ -153,7 +153,7 @@ export default function Sidebar({
           </Button>
         </div>
       </div>
-      <ScrollArea className=" ">
+      <ScrollArea className="flex-grow ">
         <div className="flex flex-col w-12">
           <div className={cn("space-y-4 ", !isSidebarCollapsed ? "p-4" : "")}>
             {navGroups.map((group, groupIndex) => (
