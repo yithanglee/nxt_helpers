@@ -29,18 +29,21 @@ export function useLogin() {
     const map = { id: 0, username, password, scope: 'sign_in' }
 
     try {
-      // Verify Turnstile token
-      const turnstileResponse = await fetch('/api/verify-turnstile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token: turnstileToken }),
-      })
-      console.log(turnstileResponse)
-      if (!turnstileResponse.ok) {
-        throw new Error('Turnstile verification failed')
+      if (turnstileToken != '') {
+        // Verify Turnstile token
+        const turnstileResponse = await fetch('/api/verify-turnstile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: turnstileToken }),
+        })
+        console.log(turnstileResponse)
+        if (!turnstileResponse.ok) {
+          throw new Error('Turnstile verification failed')
+        }
       }
+
 
       // Proceed with login
       const res = await postData(map, {
@@ -53,7 +56,7 @@ export function useLogin() {
         login({
           username,
           token: res.res,
-          userStruct: res.userStruct,
+          userStruct: res.user,
           role_app_routes: res.role_app_routes,
           id: res.user_id
         })

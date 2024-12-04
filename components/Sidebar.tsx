@@ -67,48 +67,11 @@ const defaultNavGroups: NavGroup[] = [
       { name: "Overview", href: "/dashboard", icon: HomeIcon },
     ]
   },
-  {
-    name: "Sellers",
-    items: [
-      { name: "Sellers", href: "/sellers", icon: Users, countKey: "total_sellers" },
-      { name: "Membership Packages", href: "/membership_packages", icon: Package },
-      { name: "Payments", href: "/payments", icon: CreditCard },
-      { name: "Paid Memberships", href: "/paid_memberships", icon: ShoppingBag },
-    ]
-  },
-  {
-    name: "Buyers",
-    items: [
-      { name: "Buyers", href: "/buyers", icon: Users },
 
-    ]
-  },
-  {
-    name: "Products",
-    items: [
-      { name: "Brands", href: "/brands", icon: Box },
-      { name: "Categories", href: "/categories", icon: Box },
-      { name: "Products", href: "/products", icon: Box },
-      { name: "Variants", href: "/variants", icon: Tag },
-      { name: "Unit of Measurement", href: "/unit_measurements", icon: Scale },
-      { name: "Price Groups", href: "/price_groups", icon: DollarSign },
-    ]
-  },
-  {
-    name: "Operations",
-    items: [
-      { name: "Locations", href: "/locations", icon: MapPin },
-      { name: "Marketing Campaigns", href: "/marketing_campaigns", icon: Megaphone },
-      { name: "Marketing Banners", href: "/marketing_banners", icon: Megaphone },
-      { name: "Participating Products", href: "/marketing_banner_products", icon: Megaphone },
-      { name: "Staffs", href: "/staffs", icon: Users },
-    ]
-  },
   {
     name: "System",
     items: [
       { name: "Settings", href: "/settings", icon: Settings },
-      { name: "Banner Positions", href: "/banner_positions", icon: Settings },
       { name: "Roles", href: "/roles", icon: Settings },
       { name: "App Routes", href: "/app_routes", icon: Settings },
       { name: "Logout", href: "/login", icon: LogOut },
@@ -117,12 +80,16 @@ const defaultNavGroups: NavGroup[] = [
 ]
 
 interface NavGroupProps {
+  userRole?: string,
+  allowRoutes?: string[],
   sidebarTitle: string,
   sidebarSubtitle: string
   navGroups: NavGroup[]
 }
 
 export default function Sidebar({
+  userRole = 'admin',
+  allowRoutes = [],
   sidebarTitle = 'Next Admin',
   sidebarSubtitle = 'Dashboard',
   navGroups = defaultNavGroups,
@@ -161,9 +128,10 @@ export default function Sidebar({
   return (
     <nav className={cn(
       "z-50 bg-white shadow-md transition-all duration-300 flex flex-col",
-      isSidebarCollapsed ? "w-16" : "w-64",
+      isSidebarCollapsed ? "w-12" : "w-64",
  
     )}>
+
       <div className="p-4 flex justify-between items-center">
         {!isSidebarCollapsed &&
           <>
@@ -186,7 +154,8 @@ export default function Sidebar({
         </div>
       </div>
       <ScrollArea className="flex-grow">
-        <div className={cn("space-y-4 ", !isSidebarCollapsed ? "lg:p-4" : "")}>
+
+        <div className={cn("space-y-4 ", !isSidebarCollapsed ? "lg:py-4 lg:p-4 lg:px-4" : "")}>
           {navGroups.map((group, groupIndex) => (
             <div key={group.name}>
               {groupIndex > 0 && <Separator className="my-2" />}
@@ -199,35 +168,68 @@ export default function Sidebar({
                   {isGroupCollapsed(group.name) ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
                 </button>
               )}
-              <ul className={cn(
+              {userRole == 'admin' && <ul className={cn(
                 "space-y-1 py-2",
                 isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
               )}>
-                {group.items.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "flex items-center px-4 py-2 text-sm font-medium rounded-md",
-                        pathname === item.href
-                          ? "bg-gray-200 text-gray-900"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                        isSidebarCollapsed ? "justify-center" : "justify-between"
-                      )}
-                    >
-                      <div className="flex items-center">
-                        <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
-                        {!isSidebarCollapsed && <span>{item.name}</span>}
-                      </div>
-                      {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
-                        <Badge variant="secondary" className="ml-auto">
-                          {counts[item.countKey]}
-                        </Badge>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                {group.items.map((item) =>
+
+                (<li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                      pathname === item.href
+                        ? "bg-gray-200 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                      isSidebarCollapsed ? "justify-center" : "justify-between"
+                    )}
+                  >
+                    <div className="flex items-center">
+                      <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                      {!isSidebarCollapsed && <span>{item.name}</span>}
+                    </div>
+                    {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {counts[item.countKey]}
+                      </Badge>
+                    )}
+                  </Link>
+                </li>)
+
+                )}
+              </ul>}
+              {userRole != 'admin' && <ul className={cn(
+                "space-y-1 py-2",
+                isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
+              )}>
+                {group.items.filter(item => allowRoutes.includes(item.href)).map((item) =>
+
+                (<li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                      pathname === item.href
+                        ? "bg-gray-200 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                      isSidebarCollapsed ? "justify-center" : "justify-between"
+                    )}
+                  >
+                    <div className="flex items-center">
+                      <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                      {!isSidebarCollapsed && <span>{item.name}</span>}
+                    </div>
+                    {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {counts[item.countKey]}
+                      </Badge>
+                    )}
+                  </Link>
+                </li>)
+
+                )}
+              </ul>}
             </div>
           ))}
 
@@ -255,6 +257,8 @@ export default function Sidebar({
           </ul>
 
         </div>
+        <div className=" space-y-4 p-4 text-xs text-gray-500">Role: {userRole}</div>
+    
       </ScrollArea>
     </nav>
   )

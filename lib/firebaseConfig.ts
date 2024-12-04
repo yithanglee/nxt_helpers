@@ -5,6 +5,7 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { postData } from './svt_utils';
 import Cookies from 'js-cookie';
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL, PHX_COOKIE } from '@/lib/constants';
+import { toast, useToast } from '../hooks/use-toast';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -61,9 +62,14 @@ async function requestNotificationPermission() {
 
       if (currentToken) {
         await saveTokenToServer(currentToken);
-        new Notification("Custom Notification", {
-          body: "This is shown while the app is open.",
+        // new Notification("Custom Notification", {
+        //   body: "This is shown while the app is open.",
        
+        // });
+
+        toast({
+          title: "FCM Token Saved",
+          description: "FCM Token Saved Successfully",
         });
         return currentToken;
       }

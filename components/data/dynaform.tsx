@@ -206,6 +206,9 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
   }
 
   if (key.selection) {
+    if (input == null) {
+      return ('')
+    }
 
     return (
       <div className="w-full mx-4 my-2">
@@ -223,6 +226,9 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           search_queries={key.search_queries}
           title_key={key.title_key}
           selection={key.selection}
+          multiSelection={key.multiSelection}
+          value={[]}
+       
         />
       </div>
     )

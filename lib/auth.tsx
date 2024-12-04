@@ -71,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (error) {
+        alert("!")
         console.error('Error fetching user data:', error);
       } finally {
         setIsLoading(false); // Authentication check is complete
@@ -87,7 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const login = (userData: User) => {
-    console.log(userData)
+   
+  
     setUser(userData)
     setIsLoading(false)
   }

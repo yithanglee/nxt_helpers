@@ -12,15 +12,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     if (!isLoading && !user) {
       router.push('/')
     }
-    if (!isLoading && user) {
+    if (!isLoading && user && window.location.pathname === '/') {
       router.push('/dashboard')
     }
   }, [user, isLoading, router])
 
-  if (isLoading) {
+  if (user) {
     // Optionally, render a loading spinner or placeholder
-    return <div>Loading...</div>
+    return <>{children}</>
   }
 
-  return <>{children}</>
+  return <div>Loading...</div>
 }

@@ -39,6 +39,9 @@ interface CustomCol {
     hidden?: boolean
     value?: any
     selection?: string | string[]
+    multiSelection?: boolean;
+    dataList?: any[];
+    parentId?: string;
     customCols?: any
     search_queries?: string[]
     newData?: string
@@ -56,6 +59,9 @@ interface CustomSubCol {
   alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string | string[];
+  multiSelection?: boolean;
+  dataList?: any[];
+  parentId?: string;
   search_queries: string[];
   newData: string;
   title_key: string;
@@ -68,6 +74,7 @@ interface DataTableProps {
   showNew?: boolean
   showGrid?: boolean
   canDelete?: boolean
+  canEdit?: boolean
   search_queries?: string[]
   join_statements?: Record<any, any>
   model: string
@@ -118,6 +125,7 @@ export default function DataTable({
   showGrid = false,
   gridFn = () => { return '/' },
   canDelete = false,
+  canEdit = true,
   join_statements = [],
   search_queries = [],
   model,
@@ -448,14 +456,14 @@ export default function DataTable({
                 />
               </PaginationItem>
 
-              {currentPage > 2 && (
+              {/* {currentPage > 2 && (
                 <>
                   <PaginationItem>
                     <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
                   </PaginationItem>
                   {currentPage > 3 && <PaginationEllipsis />}
                 </>
-              )}
+              )} */}
 
               {getPaginationItems().filter((v) => v > 0).map((page) => (
                 <PaginationItem key={page}>
@@ -471,15 +479,15 @@ export default function DataTable({
                   </PaginationLink>
                 </PaginationItem>
               ))}
-
+{/* 
               {currentPage < totalPages - 1 && (
                 <>
                   {currentPage < totalPages - 2 && <PaginationEllipsis />}
                   <PaginationItem>
-                    <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
+                    <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages} last</PaginationLink>
                   </PaginationItem>
                 </>
-              )}
+              )} */}
 
               <PaginationItem>
                 <PaginationNext
@@ -843,7 +851,7 @@ export default function DataTable({
                   </div>
 
                   <CardFooter className='p-4 overflow-x-scroll w-100'>
-                    <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>
+                    {canEdit && <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>}
                     {buttons.map((button, buttonIndex) => {
                       if (button.showCondition && !button.showCondition(item)) {
                         return null;
@@ -910,7 +918,7 @@ export default function DataTable({
                         </TableCell>
                       ))}
                       <TableCell>
-                        <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>
+                        {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>}
                         {buttons.map((button, buttonIndex) => {
                           if (button.showCondition && !button.showCondition(item)) {
                             return null;

@@ -9,9 +9,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { ChevronDown, Check, Search } from "lucide-react"
+import { ChevronDown, Check, Search, ChevronsUpDown } from "lucide-react"
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 import { postData } from '@/lib/svt_utils'
+import { cn } from '@/lib/utils'
+
+import { ScrollArea } from '@radix-ui/react-scroll-area'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 
 
 interface DynamicDropdownProps {
@@ -24,6 +29,8 @@ interface DynamicDropdownProps {
   search_queries: string[]
   title_key: string
   selection: string | string[]
+  multiSelection: boolean
+  value: string[]
 }
 
 export default function DynamicDropdown({
@@ -35,10 +42,14 @@ export default function DynamicDropdown({
   parent,
   search_queries,
   title_key = 'name',
-  selection
+  selection,
+  multiSelection = false,
+
+  value
 }: DynamicDropdownProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [chosenList, setChosenList] = useState<any[]>([])
   const [items, setItems] = useState<any[]>([])
   const [title, setTitle] = useState('Selected')
   const [pages, setPages] = useState<{ name: number; href: string }[]>([])
@@ -55,7 +66,7 @@ export default function DynamicDropdown({
     try {
 
 
-     await postData({
+      await postData({
         endpoint: url,
         data: map, successCallback: fetchData
       },)
@@ -138,6 +149,7 @@ export default function DynamicDropdown({
   }, [selection, fetchData])
 
   useEffect(() => {
+    console.log(input)
     if (typeof selection === 'string') {
       const selectedItem = data[input.key.replace('_id', '')]
       if (selectedItem && selectedItem[title_key]) {
@@ -150,62 +162,131 @@ export default function DynamicDropdown({
     } else {
       setTitle(data[input.key] || 'Selected')
     }
-  }, [data, input.key, title_key, selection])
+  }, [data, input, title_key, selection])
+
+
+
+  const [selectedValues, setSelectedValues] = useState<string[]>(value || [])
+  const [searchTerm, setSearchTerm] = useState("")
+
+  useEffect(() => {
+    setSelectedValues(value || [])
+  }, [value])
+
+  const handleSelect = (currentValue: string) => {
+    const updatedValues = selectedValues.includes(currentValue)
+      ? selectedValues.filter((val) => val !== currentValue)
+      : [...selectedValues, currentValue]
+    setSelectedValues(updatedValues)
+    console.log(input)
+    console.log(data)
+    console.log(newData)
+    console.log(updatedValues)
+    // data[input.key] = updatedValues
+
+    data = {...data, [input.key]: updatedValues}
+    console.log(data)
+    // onChange(updatedValues)
+  }
+
+  const filteredDataList = items.filter((item) =>
+    item[title_key].toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const label = input.key.replace('_id', '')
+  let alt_class = ''
+  if (multiSelection) {
+    alt_class = 'w-full lg:w-1/3 mx-4 my-2'
+  }
 
   return (
     <div>
-      <Input
+      {multiSelection && <div className={cn("flex flex-col space-y-2", alt_class)}>
+
+        <Input
+          id={`${label}-search`}
+          placeholder={`Search ${selection}...`}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Input
+        type="hidden"
+        name={inputName(input.key)}
+        value={selectedValues}
+         />
+        <ScrollArea className="h-[200px] border rounded-md p-2">
+          <div className="space-y-2">
+            {filteredDataList.map((item) => (
+              <div key={item.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${label}-${item.id}`}
+                  checked={selectedValues.includes(item.id)}
+                  onCheckedChange={() => handleSelect(item.id)}
+                />
+                <Label
+                  htmlFor={`${label}-${item.id}`}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {item[title_key]}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+        <div className="text-sm text-muted-foreground">
+          {selectedValues.length} item(s) selected
+        </div>
+      </div>}
+      {!multiSelection &&  <><Input
         type="hidden"
         name={inputName(input.key)}
         value={data[input.key]}
-        onChange={(e) => data[input.key] = e.target.value}
-      />
-      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-        <DropdownMenuTrigger asChild>
-          <Button>
-            {title}
-            <ChevronDown className="w-4 h-4 ml-2" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
-          <div className="p-2">
-            <div className="flex items-center space-x-2">
-              <Search className="w-4 h-4 opacity-50" />
-              <Input
-                placeholder="Search..."
-                value={query}
-                onChange={(e) => {
-                  setQuery(e.target.value)
-                  fetchData()
-                }}
-                className="h-8 w-full"
-              />
-            </div>
-          </div>
-          <div className="max-h-[300px] overflow-y-auto">
-            {items.map((item) => (
-              <DropdownMenuItem
-                key={item.id}
-                onSelect={() => updateData(item.id, item[title_key])}
-              >
-                {item[title_key]}
-              </DropdownMenuItem>
-            ))}
-          </div>
-          {typeof selection === 'string' && (
+        onChange={(e) => data[input.key] = e.target.value} /><DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              {title}
+              <ChevronDown className="w-4 h-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
             <div className="p-2">
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={tryPost}
-              >
-                <Check className="w-4 h-4 mr-2" />
-                Add
-              </Button>
+              <div className="flex items-center space-x-2">
+                <Search className="w-4 h-4 opacity-50" />
+                <Input
+                  placeholder="Search..."
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value)
+                    fetchData()
+                  } }
+                  className="h-8 w-full" />
+              </div>
             </div>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <div className="max-h-[300px] overflow-y-auto">
+              {items.map((item) => (
+                <DropdownMenuItem
+                  key={item.id}
+                  onSelect={() => updateData(item.id, item[title_key])}
+                >
+                  {item[title_key]}
+                </DropdownMenuItem>
+              ))}
+            </div>
+            {typeof selection === 'string' && (
+              <div className="p-2">
+                <Button
+                  size="sm"
+                  className="w-full"
+                  onClick={tryPost}
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu></>}
+
     </div>
   )
 }
