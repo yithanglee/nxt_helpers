@@ -7,6 +7,7 @@ interface PostDataOptions {
     endpoint?: string;
     isFormData?: boolean;
     successCallback?: () => void;
+    additionalHeaders?: Record<string, string>;
 }
 
 export async function postData(postDataOptions: PostDataOptions = {}) {
@@ -15,6 +16,7 @@ export async function postData(postDataOptions: PostDataOptions = {}) {
         method = 'POST',
         endpoint = '',
         isFormData = false,
+        additionalHeaders = {},
         successCallback
     } = postDataOptions;
     let res;
@@ -24,6 +26,7 @@ export async function postData(postDataOptions: PostDataOptions = {}) {
     let headers: Record<string, string> = {
         "Authorization": `Basic ${token}`,
         "Content-Type": "application/json",
+        ...additionalHeaders
     };
 
     if (isFormData) {
