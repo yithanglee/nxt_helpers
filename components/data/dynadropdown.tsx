@@ -30,9 +30,6 @@ interface DynamicDropdownProps {
   title_key: string
   selection: string | string[]
   multiSelection: boolean
-  dataList: any[]
-  parentId: string,
-  onChange: (value: string[]) => void
   value: string[]
 }
 
@@ -47,9 +44,7 @@ export default function DynamicDropdown({
   title_key = 'name',
   selection,
   multiSelection = false,
-  dataList,
-  parentId,
-  onChange,
+
   value
 }: DynamicDropdownProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
