@@ -226,6 +226,9 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           search_queries={key.search_queries}
           title_key={key.title_key}
           selection={key.selection}
+          multiSelection={key.multiSelection}
+          dataList={key.dataList}
+          parentId={key.parentId}
         />
       </div>
     )

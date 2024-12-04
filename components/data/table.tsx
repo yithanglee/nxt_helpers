@@ -39,6 +39,9 @@ interface CustomCol {
     hidden?: boolean
     value?: any
     selection?: string | string[]
+    multiSelection?: boolean;
+    dataList?: any[];
+    parentId?: string;
     customCols?: any
     search_queries?: string[]
     newData?: string
@@ -56,6 +59,9 @@ interface CustomSubCol {
   alt_class?: string;
   customCols?: CustomCol[] | null;
   selection: string | string[];
+  multiSelection?: boolean;
+  dataList?: any[];
+  parentId?: string;
   search_queries: string[];
   newData: string;
   title_key: string;
