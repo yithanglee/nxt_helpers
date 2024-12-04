@@ -456,14 +456,14 @@ export default function DataTable({
                 />
               </PaginationItem>
 
-              {/* {currentPage > 2 && (
+              {currentPage > 3 && (
                 <>
                   <PaginationItem>
                     <PaginationLink onClick={() => setCurrentPage(1)}>1</PaginationLink>
                   </PaginationItem>
-                  {currentPage > 3 && <PaginationEllipsis />}
+                  {currentPage > 2 && <PaginationEllipsis />}
                 </>
-              )} */}
+              )}
 
               {getPaginationItems().filter((v) => v > 0).map((page) => (
                 <PaginationItem key={page}>
@@ -479,15 +479,15 @@ export default function DataTable({
                   </PaginationLink>
                 </PaginationItem>
               ))}
-{/* 
-              {currentPage < totalPages - 1 && (
+
+              {currentPage < totalPages - 3 && (
                 <>
-                  {currentPage < totalPages - 2 && <PaginationEllipsis />}
+                  {currentPage < totalPages - 1 && <PaginationEllipsis />}
                   <PaginationItem>
-                    <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages} last</PaginationLink>
+                    <PaginationLink onClick={() => setCurrentPage(totalPages)}>{totalPages}</PaginationLink>
                   </PaginationItem>
                 </>
-              )} */}
+              )}
 
               <PaginationItem>
                 <PaginationNext
