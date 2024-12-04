@@ -129,10 +129,10 @@ export default function Sidebar({
     <nav className={cn(
       "z-50 bg-white shadow-md transition-all duration-300 flex flex-col",
       isSidebarCollapsed ? "w-12" : "w-64",
- 
+
     )}>
 
-      <div className="p-4 flex justify-between items-center">
+      <div className="p-2 lg:p-4 flex justify-between items-center" >
         {!isSidebarCollapsed &&
           <>
             <OnlineStatusContainer isOnline={isConnected} className='w-full flex flex-col'>
@@ -153,112 +153,115 @@ export default function Sidebar({
           </Button>
         </div>
       </div>
-      <ScrollArea className="flex-grow">
+      <ScrollArea className=" ">
+        <div className="flex flex-col w-12">
+          <div className={cn("space-y-4 ", !isSidebarCollapsed ? "p-4" : "")}>
+            {navGroups.map((group, groupIndex) => (
+              <div key={group.name}>
+                {groupIndex > 0 && <Separator className="my-2" />}
+                {!isSidebarCollapsed && (
+                  <button
+                    onClick={() => toggleGroup(group.name)}
+                    className="w-full px-4 py-2 flex items-center justify-between text-sm font-semibold text-gray-500 hover:bg-gray-100"
+                  >
+                    {group.name}
+                    {isGroupCollapsed(group.name) ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
+                  </button>
+                )}
+                {userRole == 'admin' && <ul className={cn(
+                  "space-y-1 py-2 px-0",
+                  isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
+                )}>
+                  {group.items.map((item) =>
 
-        <div className={cn("space-y-4 ", !isSidebarCollapsed ? "lg:py-4 lg:p-4 lg:px-4" : "")}>
-          {navGroups.map((group, groupIndex) => (
-            <div key={group.name}>
-              {groupIndex > 0 && <Separator className="my-2" />}
-              {!isSidebarCollapsed && (
-                <button
-                  onClick={() => toggleGroup(group.name)}
-                  className="w-full px-4 py-2 flex items-center justify-between text-sm font-semibold text-gray-500 hover:bg-gray-100"
+                  (<li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center px-2 py-2 text-sm font-medium rounded-md",
+                        pathname === item.href
+                          ? "bg-gray-200 text-gray-900"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                        isSidebarCollapsed ? "justify-center" : "justify-between"
+                      )}
+                    >
+                      <div className="flex items-center">
+                        <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                        {!isSidebarCollapsed && <span>{item.name}</span>}
+                      </div>
+                      {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {counts[item.countKey]}
+                        </Badge>
+                      )}
+                    </Link>
+                  </li>)
+
+                  )}
+                </ul>}
+                {userRole != 'admin' && <ul className={cn(
+                  "space-y-1 py-2",
+                  isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
+                )}>
+                  {group.items.filter(item => allowRoutes.includes(item.href)).map((item) =>
+
+                  (<li key={item.name}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                        pathname === item.href
+                          ? "bg-gray-200 text-gray-900"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                        isSidebarCollapsed ? "justify-center" : "justify-between"
+                      )}
+                    >
+                      <div className="flex items-center">
+                        <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                        {!isSidebarCollapsed && <span>{item.name}</span>}
+                      </div>
+                      {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {counts[item.countKey]}
+                        </Badge>
+                      )}
+                    </Link>
+                  </li>)
+
+                  )}
+                </ul>}
+              </div>
+            ))}
+
+            <ul className=' "space-y-1 py-2"'>
+              <li key={'logout'}>
+                <Button variant={'ghost'}
+                  onClick={() => {
+                    handleLogout()
+                  }}
+                  className={cn(
+                    "flex items-center px-4 py-2 text-sm font-medium rounded-md",
+                    pathname === '/login'
+                      ? "bg-gray-200 text-gray-900"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                    isSidebarCollapsed ? "justify-center" : "justify-between"
+                  )}
                 >
-                  {group.name}
-                  {isGroupCollapsed(group.name) ? <ChevronRightIcon className="h-4 w-4" /> : <ChevronDownIcon className="h-4 w-4" />}
-                </button>
-              )}
-              {userRole == 'admin' && <ul className={cn(
-                "space-y-1 py-2",
-                isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
-              )}>
-                {group.items.map((item) =>
+                  <div className="flex items-center">
+                    <LogOut className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
+                    {!isSidebarCollapsed && <span>{'logout'}</span>}
+                  </div>
 
-                (<li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center px-4 py-2 text-sm font-medium rounded-md",
-                      pathname === item.href
-                        ? "bg-gray-200 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                      isSidebarCollapsed ? "justify-center" : "justify-between"
-                    )}
-                  >
-                    <div className="flex items-center">
-                      <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
-                      {!isSidebarCollapsed && <span>{item.name}</span>}
-                    </div>
-                    {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {counts[item.countKey]}
-                      </Badge>
-                    )}
-                  </Link>
-                </li>)
+                </Button>
+              </li>
+            </ul>
 
-                )}
-              </ul>}
-              {userRole != 'admin' && <ul className={cn(
-                "space-y-1 py-2",
-                isSidebarCollapsed || !isGroupCollapsed(group.name) ? "block" : "hidden"
-              )}>
-                {group.items.filter(item => allowRoutes.includes(item.href)).map((item) =>
-
-                (<li key={item.name}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      "flex items-center px-4 py-2 text-sm font-medium rounded-md",
-                      pathname === item.href
-                        ? "bg-gray-200 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                      isSidebarCollapsed ? "justify-center" : "justify-between"
-                    )}
-                  >
-                    <div className="flex items-center">
-                      <item.icon className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
-                      {!isSidebarCollapsed && <span>{item.name}</span>}
-                    </div>
-                    {!isSidebarCollapsed && item.countKey && counts[item.countKey] !== undefined && (
-                      <Badge variant="secondary" className="ml-auto">
-                        {counts[item.countKey]}
-                      </Badge>
-                    )}
-                  </Link>
-                </li>)
-
-                )}
-              </ul>}
-            </div>
-          ))}
-
-          <ul className=' "space-y-1 py-2"'>
-            <li key={'logout'}>
-              <Button variant={'ghost'}
-                onClick={() => {
-                  handleLogout()
-                }}
-                className={cn(
-                  "flex items-center px-4 py-2 text-sm font-medium rounded-md",
-                  pathname === '/login'
-                    ? "bg-gray-200 text-gray-900"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                  isSidebarCollapsed ? "justify-center" : "justify-between"
-                )}
-              >
-                <div className="flex items-center">
-                  <LogOut className={cn("h-5 w-5", isSidebarCollapsed ? "mr-0" : "mr-3")} />
-                  {!isSidebarCollapsed && <span>{'logout'}</span>}
-                </div>
-
-              </Button>
-            </li>
-          </ul>
-
+          </div>
+          <div className=" space-y-4 p-4 text-xs text-gray-500">Role: {userRole}</div>
         </div>
-        <div className=" space-y-4 p-4 text-xs text-gray-500">Role: {userRole}</div>
-    
+
+
+
       </ScrollArea>
     </nav>
   )
