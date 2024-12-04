@@ -153,6 +153,8 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
         </Label>
         <div className='h-2'></div>
       <DynamicDropdown
+        multiSelection={key.multiSelection}
+        value={key.value}
         data={data}
         input={input}
         newData={key.newData}
