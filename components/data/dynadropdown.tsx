@@ -49,6 +49,7 @@ export default function DynamicDropdown({
 }: DynamicDropdownProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [chosenList, setChosenList] = useState<any[]>([])
   const [items, setItems] = useState<any[]>([])
   const [title, setTitle] = useState('Selected')
   const [pages, setPages] = useState<{ name: number; href: string }[]>([])
@@ -181,7 +182,9 @@ export default function DynamicDropdown({
     console.log(data)
     console.log(newData)
     console.log(updatedValues)
-    data[input.key] = updatedValues
+    // data[input.key] = updatedValues
+
+    data = {...data, [input.key]: updatedValues}
     console.log(data)
     // onChange(updatedValues)
   }
@@ -206,6 +209,11 @@ export default function DynamicDropdown({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        <Input
+        type="hidden"
+        name={inputName(input.key)}
+        value={selectedValues}
+         />
         <ScrollArea className="h-[200px] border rounded-md p-2">
           <div className="space-y-2">
             {filteredDataList.map((item) => (
