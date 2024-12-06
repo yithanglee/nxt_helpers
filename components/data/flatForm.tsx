@@ -195,7 +195,7 @@ interface DynamicFormProps {
   style?: string
 }
 
-export default function DynamicForm({ data, inputs, customCols, module, postFn, showNew = false, style }: DynamicFormProps) {
+export default function FlatForm({ data, inputs, customCols, module, postFn, showNew = false, style }: DynamicFormProps) {
   const { user, logout } = useAuth()
   console.log(user)
   const [formData, setFormData] = useState(data)

@@ -28,6 +28,7 @@ import {
 import DynamicDropdown from './dynadropdown'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
 import { useToast } from '@/hooks/use-toast'
+import { Separator } from '@/components/ui/separator'
 // Dynamically import TinyMCE to avoid SSR issues
 // const TinyMCEditor = dynamic(() => import('@tinymce/tinymce-react').then(mod => mod.Editor), { ssr: false })
 
@@ -228,40 +229,17 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           selection={key.selection}
           multiSelection={key.multiSelection}
           value={[]}
-       
+
         />
       </div>
     )
   }
 
-  // if (key.multiSelection) {
-  //   return (
-  //     <div className="w-full mx-4 my-2">
-  //       <Label className="space-y-2 mb-3">
-  //         <span className="capitalize">{altName}</span>
-  //       </Label>
-  //       {/* Assume MultiSelection is already defined */}
-  //       <MultiSelection
-  //         data={data}
-  //         input={input}
-  //         dataList={key.dataList}
-  //         parent_id={key.parentId}
-  //         module={key.module}
-  //         selection={key.selection}
-  //         name={inputName(inputKey)}
-  //         onChange={handleChange}
-  //       />
-  //     </div>
-  //   );
-  // }
-
-
-  // Default to text input for any other type
   return (
     <div className={altClassName}>
       <Label className="space-y-2">
         <span className="capitalize">{altName}</span>
-        <Input
+        <Input className='rounded-md'
           type="text"
           name={inputName(inputKey)}
           value={value || ''}
@@ -275,7 +253,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 interface DynamicFormProps {
   data: any
   inputs: any[]
-  customCols: { title: string; list: (string | { label: string;[key: string]: any })[] }[]
+  customCols: { title: string; description: string; list: (string | { label: string;[key: string]: any })[] }[]
   module: string
   postFn: () => void
   showNew?: boolean
@@ -332,8 +310,6 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
         }
       })
 
-
-
       if (response.ok) {
         postFn()
         setIsModalOpen(false)
@@ -354,7 +330,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     }
   }
   useEffect(() => {
-   
+
     setFormData(data)
   }, [])
   const renderForm = () => (
@@ -394,38 +370,68 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       </div>
 
     </form>
+
+  )
+  const renderAlternativeForm = () => (
+    <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
+      <div className='grid grid-cols-9'>
+        <div className="col-span-full lg:col-span-2 pr-8 pt-4">
+          {customCols.map((col) => (
+            <div
+              key={col.title}
+              className={`p-2 rounded-md cursor-pointer ${selectedTab === col.title ? 'bg-gray-200' : 'bg-white'}`}
+              onClick={() => setSelectedTab(col.title)}
+            >
+              <div className="flex items-center gap-2  hover:underline">
+               
+                {col.title}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="col-span-full lg:col-span-6 p-4 flex flex-col gap-4">
+
+          {customCols.map((col) => (
+            <div
+              key={col.title}
+              className={`${selectedTab === col.title ? 'block' : 'hidden'}`}
+            >
+              <div className='text-lg font-bold'>{col.title} </div>
+             
+              <div className='text-sm text-gray-500 mb-8'>Information here are available only to you</div>
+              <Separator />
+              <div className='h-2'></div>
+              <div className="flex flex-wrap w-full gap-2">
+                {col.list.map((key, index) => (
+                  <DynamicInput
+                    key={index}
+                    input={inputs.find(input => input.key === (typeof key === 'string' ? key : key.label))}
+                    keyName={key}
+                    module={module}
+                    data={formData}
+                    onChange={handleInputChange}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="lg:col-span-1"></div>
+      </div>
+
+      <div >
+        <Button className="ml-3" type="submit">Submit</Button>
+      </div>
+    </form>
   )
 
   console.log("rendering form...")
   console.log(formData)
 
-  if (style === null) {
-    return (
-      <>
-        {showNew && (
-          <Button onClick={() => {
-            setFormData({ id: 0 })
-            setIsModalOpen(true)
-          }}>
-            New
-          </Button>
-        )}
 
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{module} Form</DialogTitle>
-            </DialogHeader>
-            {renderForm()}
-          </DialogContent>
-        </Dialog>
-      </>
-    )
+  if (style === 'flat') {
+    return renderAlternativeForm()
   } else {
-    return (
-      <div className="space-y-4">
-        {renderForm()}
-      </div>
-    )
+    return renderForm()
   }
 }
