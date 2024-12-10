@@ -224,9 +224,11 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           name={inputName(inputKey)}
           module={key.selection}
           parent={module}
+          preloads={key.preloads}
           search_queries={key.search_queries}
           title_key={key.title_key}
           selection={key.selection}
+          join_statements={key.join_statements}
           multiSelection={key.multiSelection}
           value={[]}
 
@@ -253,7 +255,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 interface DynamicFormProps {
   data: any
   inputs: any[]
-  customCols: { title: string; description: string; list: (string | { label: string;[key: string]: any })[] }[]
+  customCols: { title: string; description?: string; list: (string | { label: string;[key: string]: any })[] }[]
   module: string
   postFn: () => void
   showNew?: boolean
@@ -262,7 +264,7 @@ interface DynamicFormProps {
 
 export default function DynamicForm({ data, inputs, customCols, module, postFn, showNew = false, style }: DynamicFormProps) {
   const { user, logout } = useAuth()
-  let { toast } = useToast()
+  const { toast } = useToast()
   const [formData, setFormData] = useState(data)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState('')
@@ -313,7 +315,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       if (response.ok) {
         postFn()
         setIsModalOpen(false)
-
+        console.log("postFn toast")
         toast({
           title: "Action Completed",
           description: "Your action was successful!",
@@ -321,6 +323,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       } else {
         console.error('Form submission failed')
         toast({
+          variant: "default",
           title: "Something went wrong!",
           description: "Your action was unsuccessful!",
         })

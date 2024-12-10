@@ -30,6 +30,8 @@ interface DynamicDropdownProps {
   title_key: string
   selection: string | string[]
   multiSelection: boolean
+  join_statements: Record<string, string>[]
+  preloads: string[]
   value: string[]
 }
 
@@ -44,7 +46,8 @@ export default function DynamicDropdown({
   title_key = 'name',
   selection,
   multiSelection = false,
-
+  join_statements,
+  preloads,
   value
 }: DynamicDropdownProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -97,16 +100,18 @@ export default function DynamicDropdown({
   const fetchData = useCallback(async (pageNumber: number = 1) => {
     const apiData = {
       search: { regex: 'false', value: query.trim() },
-      additional_join_statements: data.join_statements,
+      additional_join_statements: JSON.stringify(join_statements),
       additional_search_queries: search_queries,
       draw: '1',
       length: itemsPerPage,
       model: module,
       columns: { 0: { data: 'id', name: 'id' } },
       order: { 0: { column: 0, dir: 'desc' } },
-      preloads: JSON.stringify(data.preloads),
+      preloads: JSON.stringify(preloads),
       start: (pageNumber - 1) * itemsPerPage
     }
+
+    console.log(apiData)
 
     const queryString = buildQueryString({ ...apiData }, null);
 
@@ -132,7 +137,7 @@ export default function DynamicDropdown({
     } catch (error) {
       console.error('An error occurred', error)
     }
-  }, [cac_url, data.join_statements, data.preloads, itemsPerPage, module, query, search_queries])
+  }, [cac_url, join_statements, data.preloads, itemsPerPage, module, query, search_queries])
 
   const updateData = (id: string, name: string) => {
     setDropdownOpen(false)
@@ -184,14 +189,33 @@ export default function DynamicDropdown({
     console.log(updatedValues)
     // data[input.key] = updatedValues
 
-    data = {...data, [input.key]: updatedValues}
+    data = { ...data, [input.key]: updatedValues }
     console.log(data)
     // onChange(updatedValues)
   }
 
-  const filteredDataList = items.filter((item) =>
-    item[title_key].toLowerCase().includes(searchTerm.toLowerCase())
-  )
+
+
+  let filteredDataList: any[] = []
+
+  if (items.length > 0) {
+    console.log(items)
+    items.filter((item) => {
+      try {
+        if (title_key.includes('.')) {
+          const [key, subKey] = title_key.split('.')
+          return item[key][subKey].toLowerCase().includes(searchTerm.toLowerCase())
+        } else {
+          return item[title_key].toLowerCase().includes(searchTerm.toLowerCase())
+        }
+      } catch (e) {
+        console.error(e)
+      }
+
+
+    })
+
+  }
 
   const label = input.key.replace('_id', '')
   let alt_class = ''
@@ -210,10 +234,10 @@ export default function DynamicDropdown({
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <Input
-        type="hidden"
-        name={inputName(input.key)}
-        value={selectedValues}
-         />
+          type="hidden"
+          name={inputName(input.key)}
+          value={selectedValues}
+        />
         <ScrollArea className="h-[200px] border rounded-md p-2">
           <div className="space-y-2">
             {filteredDataList.map((item) => (
@@ -237,7 +261,7 @@ export default function DynamicDropdown({
           {selectedValues.length} item(s) selected
         </div>
       </div>}
-      {!multiSelection &&  <><Input
+      {!multiSelection && <><Input
         type="hidden"
         name={inputName(input.key)}
         value={data[input.key]}
@@ -258,12 +282,22 @@ export default function DynamicDropdown({
                   onChange={(e) => {
                     setQuery(e.target.value)
                     fetchData()
-                  } }
+                  }}
                   className="h-8 w-full" />
               </div>
             </div>
             <div className="max-h-[300px] overflow-y-auto">
-              {items.map((item) => (
+              {title_key.includes(".") && <div>
+                {items.map((item) => (
+                  <DropdownMenuItem
+                    key={item.id}
+                  onSelect={() => updateData(item.id, item[title_key.split(".")[0]][title_key.split(".")[1]])}
+                >
+                  {item[title_key.split(".")[0]][title_key.split(".")[1]]} id: {item['id']}
+                </DropdownMenuItem>
+                ))}
+              </div>}
+              {!title_key.includes(".") && items.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
                   onSelect={() => updateData(item.id, item[title_key])}

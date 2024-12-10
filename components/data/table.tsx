@@ -40,10 +40,12 @@ interface CustomCol {
     value?: any
     selection?: string | string[]
     multiSelection?: boolean;
+    preloads?: string[]
     dataList?: any[];
     parentId?: string;
     customCols?: any
     search_queries?: string[]
+    join_statements?: Record<any, string>[]
     newData?: string
     title_key?: string
     boolean?: boolean
@@ -60,6 +62,7 @@ interface CustomSubCol {
   customCols?: CustomCol[] | null;
   selection: string | string[];
   multiSelection?: boolean;
+  preloads?: string[]
   dataList?: any[];
   parentId?: string;
   search_queries: string[];
