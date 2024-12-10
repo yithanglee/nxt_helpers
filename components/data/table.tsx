@@ -85,16 +85,16 @@ interface DataTableProps {
   buttons?: {
     name: string
     onclickFn: (
-      item: any, 
+      item: any,
       name: string,
-      refreshData: () => void, 
+      refreshData: () => void,
       confirmModalFn: (
-        bool: boolean, 
-        message: string, 
-        fn: () => void, 
+        bool: boolean,
+        message: string,
+        fn: () => void,
         opts?: any) => void,
-        
-        ) => void
+
+    ) => void
     href?: (item: any) => string
     showCondition?: (item: any) => boolean
   }[]
@@ -153,12 +153,15 @@ export default function DataTable({
   const [error, setError] = useState<string | null>(null)
   const [previewModal, setPreviewModal] = useState(false)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
+  const [sortColumn, setSortColumn] = useState('')
+  const [sortOrder, setSortOrder] = useState('asc')
   const router = useRouter()
   const searchParams = useSearchParams()
   let selectedData = {};
   let isLoading = false, isLoading2 = false;
   let dict: Record<any, any> = {};
-
+  // let order_statements: any[] = []
+  const [order_statements, setOrderStatements] = useState<any[]>([])
   // Fetch colInputs using genInputs inside useEffect
   useEffect(() => {
     const fetchColInputs = async () => {
@@ -211,6 +214,30 @@ export default function DataTable({
 
   }, [search_queries])
 
+
+
+  const handleSort = useCallback((column: { label: string; data: string; subtitle?: { label: string; data: string; }; formatDateTime?: boolean; offset?: number; isBadge?: boolean; showImg?: boolean; showJson?: boolean; showPreview?: boolean; showDateTime?: boolean; color?: { key: string | boolean; value: string; }[]; through?: string[]; altClass?: string; }): void => {
+
+
+    const newSortColumn = column.through ? `${column.through[0]}.${column.data}` : column.data;
+    setSortColumn(newSortColumn);
+    const newSortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    setSortOrder(newSortOrder);
+    setOrderStatements([{ column: newSortColumn, dir: newSortOrder }])
+
+    // neeed to get existing join statement to get the mapping...
+
+
+  }, [sortOrder, sortColumn, order_statements]);
+
+
+  useEffect(() => {
+    console.log(order_statements)
+    fetchData(currentPage);
+  }, [order_statements])
+
+
+
   function buildQueryString(data: any, parentKey: any) {
     return Object.keys(data)
       .map((key): any => {
@@ -250,14 +277,28 @@ export default function DataTable({
       console.error(e)
 
     }
+
+
+    let dataColumns: any = {}
+
+    for (let index = 0; index < columns.length; index++) {
+      const element = columns[index];
+      if (element.through && element.through.length > 0) {
+        dataColumns[index] = { data: 'id', name: 'id' }
+      } else {
+        dataColumns[index] = { data: element.data, name: element.label }
+      }
+    }
+
     const apiData = {
       search: { regex: 'false', value: finalSearchQuery },
       additional_join_statements: JSON.stringify(join_statements),
       additional_search_queries: buildSearchString(searchQuery),
+      additional_order_statements: JSON.stringify(order_statements),
       draw: '1',
       length: itemsPerPage,
       model: model,
-      columns: { 0: { data: 'id', name: 'id' } },
+      columns: dataColumns,
       order: { 0: { column: 0, dir: 'desc' } },
       preloads: JSON.stringify(preloads),
       start: (pageNumber - 1) * itemsPerPage,
@@ -290,7 +331,7 @@ export default function DataTable({
 
     }
   },
-    [model, searchQuery, appendQueries, preloads, buildSearchString]
+    [model, searchQuery, appendQueries, preloads, buildSearchString, order_statements]
   );
 
   useEffect(() => {
@@ -794,6 +835,15 @@ export default function DataTable({
     return <div>Error: {error}</div>
   }
 
+  function renderCaret(column: { label: string; data: string; subtitle?: { label: string; data: string; }; formatDateTime?: boolean; offset?: number; isBadge?: boolean; showImg?: boolean; showJson?: boolean; showPreview?: boolean; showDateTime?: boolean; color?: { key: string | boolean; value: string; }[]; through?: string[]; altClass?: string; }): React.ReactNode {
+    if (sortColumn === column.data) {
+      return sortOrder === 'asc' ? '▲' : '▼'
+    } else if (column.through && sortColumn === column.through[0] + '.' + column.data) {
+      return sortOrder === 'asc' ? '▲' : '▼'
+    }
+    return '-'
+  }
+
   return (
 
     <div className="space-y-4">
@@ -904,7 +954,12 @@ export default function DataTable({
                 <TableHeader>
                   <TableRow>
                     {columns.map((column, index) => (
-                      <TableHead key={index}>{column.label}</TableHead>
+                      <TableHead  className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
+
+                        <span className="caret">
+                          {renderCaret(column)}
+                        </span>
+                      </TableHead>
                     ))}
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -913,11 +968,13 @@ export default function DataTable({
                   {items.map((item, itemIndex) => (
                     <TableRow key={itemIndex}>
                       {columns.map((column, columnIndex) => (
-                        <TableCell key={columnIndex}>
+
+                        <TableCell key={columnIndex} >
                           {column.altClass && <div className={column.altClass}>
                             {renderCell(item, column)}
                           </div>}
                           {!column.altClass && renderCell(item, column)}
+
                         </TableCell>
                       ))}
                       <TableCell>

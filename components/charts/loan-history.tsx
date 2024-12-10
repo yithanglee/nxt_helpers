@@ -71,7 +71,7 @@ const LoanHistoryChart: React.FC<LoanHistoryChartProps> = ({ data, year, title, 
         <div className="flex flex-col md:flex-row gap-4">
           <div className="w-full lg:w-1/4">
             <h3 className="text-lg font-semibold mb-2">Categories</h3>
-            <ScrollArea className="h-[240px]">
+            <ScrollArea className="h-[480px]">
               {data.map(category => (
                 <div key={category.code} className="flex items-center space-x-2 mb-2">
                   <Checkbox
@@ -90,7 +90,7 @@ const LoanHistoryChart: React.FC<LoanHistoryChartProps> = ({ data, year, title, 
             </ScrollArea>
           </div>
           <div className="w-full lg:w-3/4">
-            <ChartContainer className="h-[240px] w-full" config={{
+            <ChartContainer className="h-[480px] w-full" config={{
               count: {
                 label: "Loan by categories",
                 color: "hsl(var(--chart-1))",
