@@ -61,13 +61,14 @@ export async function populateData({
 
 
     async function fetchData(pageNumber: number) {
-
+        let order_statements: never[] = []
 
 
         const apiData = {
             search: { regex: 'false', value: search_queries },
             additional_join_statements: JSON.stringify(join_statements),
             additional_search_queries: buildSearchString(search_queries),
+            additional_order_statements: JSON.stringify(order_statements),
             draw: '1',
             length: itemsPerPage,
             model: model,
