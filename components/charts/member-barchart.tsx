@@ -20,7 +20,7 @@ const MemberJoinChart: React.FC<MemberJoinChartProps> = ({ data, year , title, s
   }
 
   return (
-    <Card className=" col-span-6 lg:col-span-3">
+    <Card className=" col-span-6 lg:col-span-4">
       <CardHeader>
         <CardTitle>{title} ({year})</CardTitle>
         <CardDescription>{subtitle}</CardDescription>
