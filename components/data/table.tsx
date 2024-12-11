@@ -160,32 +160,23 @@ export default function DataTable({
   let selectedData = {};
   let isLoading = false, isLoading2 = false;
   let dict: Record<any, any> = {};
-  // let order_statements: any[] = []
+
   const [order_statements, setOrderStatements] = useState<any[]>([])
   // Fetch colInputs using genInputs inside useEffect
   useEffect(() => {
-    const fetchColInputs = async () => {
-      isLoading = true;
-      const inputs = await genInputs(url, model);
-      isLoading = false;
-      setColInputs(inputs);
-    };
-
-    if (!isLoading && showNew) {
-
-      fetchColInputs();
-    }
-
     const currentParams = new URLSearchParams(searchParams);
     let qp = currentParams.get("page_no");
-    console.log(qp);
-    if (qp != "") {
-      // Set or update the page_no parameter
-      let pageNo = parseInt(qp!) || 1;
+    if (qp) {
+      let pageNo = parseInt(qp) || 1;
       setCurrentPage(pageNo);
     }
-
+  
+    // Only fetch data if we're not already loading and there are no pending search queries
+    if (!isLoading2 && Object.keys(dict).length === 0) {
+      fetchData(currentPage);
+    }
   }, []);
+  
 
 
   useEffect(() => {
@@ -231,11 +222,6 @@ export default function DataTable({
   }, [sortOrder, sortColumn, order_statements]);
 
 
-  useEffect(() => {
-    console.log(order_statements)
-    fetchData(currentPage);
-  }, [order_statements])
-
 
 
   function buildQueryString(data: any, parentKey: any) {
@@ -272,10 +258,8 @@ export default function DataTable({
           delete finalSearchQuery[key];
         }
       }
-
     } catch (e) {
       console.error(e)
-
     }
 
 
@@ -305,6 +289,10 @@ export default function DataTable({
     };
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null).replaceAll("&&", "&");
+
+    console.log("from fetch data")
+    console.log(appendQueries)
+
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
     console.info(apiData)
     try {
@@ -334,67 +322,67 @@ export default function DataTable({
     [model, searchQuery, appendQueries, preloads, buildSearchString, order_statements]
   );
 
+
+  function updateAppendQueries() {
+    console.log(appendQueries)
+
+    console.log('initial search que')
+    console.log(searchQuery)
+
+
+    if (Object.keys(searchQuery).length > 0) {
+      let keys = Object.keys(searchQuery)
+      for (let index = 0; index < keys.length; index++) {
+        const key = keys[index];
+        if (key.includes('.')) {
+          let keyParts = key.split('.')
+          let newKey = keyParts[0]
+          let newVal = keyParts[1]
+
+          if (newKey == "a") {
+            appendQueries[newVal] = searchQuery[key]
+          }
+
+
+        }
+
+      }
+    }
+    console.log(appendQueries)
+  }
+
   useEffect(() => {
     if (!isLoading2) {
-      fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
+      fetchData(currentPage);
     }
-  }, [currentPage, searchQuery]); // Trigger only when these states change
-
+  }, [currentPage, searchQuery, order_statements]); // Include all dependencies that should trigger a fetch
+  
 
   useEffect(() => {
-
-    console.log('searc h queyris')
-    console.log(search_queries)
-
-    for (let index = 0; index < search_queries.length; index++) {
-      const element = search_queries[index];
-      let singleS = element.split("|");
-      for (let index2 = 0; index2 < singleS.length; index2++) {
-        const sElement = singleS[index2];
-        if (sElement.includes("=")) {
-          if (sElement.split("=")[1] != 'undefined') {
-            dict[sElement.split("=")[0]] = sElement.split("=")[1]
-            setSearchQuery(prevQuery => ({ ...prevQuery, [sElement.split("=")[0]]: sElement.split("=")[1] }));
-
+    if (search_queries.length > 0) {
+      const newDict: Record<string, string> = {};
+      
+      for (const query of search_queries) {
+        const singleS = query.split("|");
+        for (const sElement of singleS) {
+          if (sElement.includes("=")) {
+            const [key, value] = sElement.split("=");
+            if (value !== 'undefined') {
+              newDict[key] = value;
+            }
           }
         }
+      }
+  
+      // Only update if there are actual changes
+      if (Object.keys(newDict).length > 0) {
+        dict = newDict;
+        setSearchQuery(newDict);
       }
     }
   }, [search_queries]);
 
-  // const updateUrlWithSearch = useCallback(() => {
-  //   const searchParam = JSON.stringify(searchQuery)
-  //   const newParams = new URLSearchParams(searchParams.toString())
-  //   newParams.set('search', searchParam)
-  //   console.log(router)
-  //   router.replace(`${window.location.pathname}?${newParams.toString()}`, { scroll: false })
-  // }, [router, searchParams, searchQuery])
 
-
-  // const parseSearchFromUrl = useCallback(() => {
-  //   const searchParam = searchParams.get('search')
-  //   console.log(searchParam)
-  //   if (searchParam) {
-  //     try {
-  //       const parsedSearch = JSON.parse(searchParam)
-  //       console.log(parsedSearch)
-  //       setSearchQuery(parsedSearch)
-  //     } catch (error) {
-  //       console.error('Error parsing search query from URL:', error)
-  //     }
-  //   }
-  // }, [searchParams])
-
-  // Effect to update URL when search query changes
-  useEffect(() => {
-    if (Object.keys(searchQuery).length) {
-      // updateUrlWithSearch()
-    }
-  }, [searchQuery])
-
-
-
-  // Modify handleSearch to include URL update
   const handleSearch = (newSearchQuery: any) => {
     console.log('new search qur')
     console.log(newSearchQuery)
@@ -402,10 +390,6 @@ export default function DataTable({
     setCurrentPage(1)
     // updateUrlWithSearch()
   }
-  // Effect to parse search query from URL on initial load
-  // useEffect(() => {
-  //   parseSearchFromUrl()
-  // }, [parseSearchFromUrl])
 
   const handleNew = () => {
     setSelectedItem({ ...{ id: "0" }, ...appendQueries })
@@ -443,7 +427,6 @@ export default function DataTable({
     });
     setConfirmModalOpen(true);
   };
-
 
   const confirmModalFn = (bool: boolean, message: string, fn: () => void, opts?: any) => {
     setConfirmModalOpen(bool)
@@ -954,7 +937,7 @@ export default function DataTable({
                 <TableHeader>
                   <TableRow>
                     {columns.map((column, index) => (
-                      <TableHead  className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
+                      <TableHead className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
 
                         <span className="caret">
                           {renderCaret(column)}
