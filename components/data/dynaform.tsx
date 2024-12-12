@@ -208,6 +208,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   if (key.selection) {
     if (input == null) {
+      console.log("no input")
       return ('')
     }
 
@@ -336,6 +337,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
 
     setFormData(data)
   }, [])
+
   const renderForm = () => (
 
     <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
@@ -429,7 +431,12 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
   )
 
   console.log("rendering form...")
-  console.log(formData)
+  try {
+    console.log(formData)
+  } catch (e){
+    console.error(e)
+  }
+
 
 
   if (style === 'flat') {

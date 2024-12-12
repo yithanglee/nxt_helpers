@@ -164,6 +164,18 @@ export default function DataTable({
   const [order_statements, setOrderStatements] = useState<any[]>([])
   // Fetch colInputs using genInputs inside useEffect
   useEffect(() => {
+    const fetchColInputs = async () => {
+      isLoading = true;
+      const inputs = await genInputs(url, model);
+      isLoading = false;
+      setColInputs(inputs);
+    };
+
+    if (!isLoading && showNew) {
+
+      fetchColInputs();
+    }
+
     const currentParams = new URLSearchParams(searchParams);
     let qp = currentParams.get("page_no");
     if (qp) {
