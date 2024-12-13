@@ -4,7 +4,8 @@
 // export const PHX_WS_PROTOCOL = process.env.PHX_WS_PROTOCOL || 'ws://';  // Default to 'http' if not set
 export const PHX_HTTP_PROTOCOL = process.env.NEXT_PUBLIC_HTTP_PROTOCOL || 'https://';  // Default to 'http' if not set
 export const PHX_WS_PROTOCOL = process.env.NEXT_PUBLIC_WS_PROTOCOL || 'wss://';  // Default to 'http' if not set
-export const PHX_ENDPOINT = process.env.NEXT_PUBLIC_ENDPOINT 
+export const PHX_ENDPOINT = process.env.NEXT_PUBLIC_ENDPOINT
+export const NST_ENDPOINT = process.env.NEXT_PUBLIC_ENDPOINT_NST || 'localhost:9000'
 
 // Cookie Names
 export const PHX_COOKIE = process.env.NEXT_PUBLIC_COOKIE || 'next-cookie';  // Could make this environment-dependent if necessary

@@ -319,9 +319,17 @@ export default function DataTable({
       }
 
       const dataList = await response.json();
-      setItems(dataList.data);
-      setData(dataList.data);
-      setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
+
+      if (dataList.data.data) {
+        setItems(dataList.data.data);
+        setData(dataList.data.data);
+        console.log(dataList.data.data)
+        setTotalPages(Math.ceil(dataList.data.recordsFiltered / itemsPerPage));
+      } else {
+        setItems(dataList.data);
+        setData(dataList.data);
+        setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
+      }
       isLoading2 = false
     } catch (error) {
       console.error('An error occurred', error);
@@ -392,6 +400,8 @@ export default function DataTable({
         setSearchQuery(newDict);
       }
     }
+
+    console.log(search_queries)
   }, [search_queries]);
 
 
@@ -884,7 +894,7 @@ export default function DataTable({
           <div>
             <div className='lg:hidden '>
 
-              {items.map((item, itemIndex) => (
+              { items && items.map((item, itemIndex) => (
                 <Card key={itemIndex} className='p-0 mb-2'>
                   <div className='grid grid-flow-row auto-rows-max p-4'>
                     {columns.map((column, columnIndex) => (

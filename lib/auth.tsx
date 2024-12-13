@@ -24,7 +24,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (userData: User) => void
   logout: () => void
-  forgotPassword: (email: string) => Promise<void> 
+  forgotPassword: (email: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -36,6 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkExistingUser = async () => {
+
+
       try {
         console.log("Checking existing user...");
 
@@ -48,10 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/webhook?scope=get_cookie_user&cookie=` + storedCookie,
             {
               method: 'GET',
-              credentials: 'include',
+              // credentials: 'include',
             }
           );
-
+     
           if (!response.ok) {
             throw new Error('Failed to fetch user data');
           }
@@ -61,13 +63,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // If user data exists, set the user in the state
           if (storedUser) {
+           if ( Object.keys(storedUser).includes('statusCode') && Object.keys(storedUser).includes('message') && Object.keys(storedUser).includes('data')) {
+            setUser({
+              token: storedUser.data.res.tokens.access_token,
+              username: storedUser.data.res.admin.username ?? '',
+              userStruct: storedUser.data.res.admin,
+              role_app_routes: [],
+              id: storedUser.data.res.admin.id ?? 0,
+            });
+           } else {
             setUser({
               token: storedUser.cookie,
               username: storedUser.user.username ?? '',
-              userStruct: storedUser.user, 
+              userStruct: storedUser.user,
               role_app_routes: storedUser.user.role.role_app_routes ?? [],
               id: storedUser.user.id ?? 0,
             });
+           }
+          
           }
         }
       } catch (error) {
@@ -88,8 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const login = (userData: User) => {
-   
-  
+
+
     setUser(userData)
     setIsLoading(false)
   }
@@ -101,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
   const forgotPassword = async (email: string) => {
-  
+
   }
 
   return (
@@ -123,7 +136,8 @@ export const signUp = async (email: string, password: string) => {
   let res = createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
     let user = userCredential.user;
     const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
-    postData({endpoint: `${url}/svt_api/webhook`,
+    postData({
+      endpoint: `${url}/svt_api/webhook`,
       data: {
         scope: "google_signin",
         result: {
@@ -142,7 +156,8 @@ export const signIn = async (email: string, password: string) => {
   let res = signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
     let user = userCredential.user;
     const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`
-    postData({endpoint: `${url}/svt_api/webhook`,
+    postData({
+      endpoint: `${url}/svt_api/webhook`,
       data: {
         scope: "google_signin",
         result: {
@@ -160,12 +175,12 @@ export const signIn = async (email: string, password: string) => {
   return res;
 };
 
-export const forgotPassword = async(email: string ) => {
+export const forgotPassword = async (email: string) => {
   try {
-    let res =   await sendPasswordResetEmail(auth, email)
+    let res = await sendPasswordResetEmail(auth, email)
     console.log('Password reset email sent successfully')
 
-    return res ; 
+    return res;
   } catch (error) {
     console.error('Error sending password reset email:', error)
     throw error // Rethrow error to handle in the calling component if needed
