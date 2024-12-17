@@ -78,8 +78,7 @@ const IndexPage: React.FC<IndexPageProps> = ({ postFn }) => {
 
                     let list: string[] = []
                     
-                   
-                    list = content.split("\n");
+                    list = content.replaceAll(/[\r\n]/g, "\n").split("\n");
                     const header = list.splice(0, 1);
 
                     // Explicitly type the arrays
