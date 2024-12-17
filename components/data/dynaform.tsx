@@ -340,7 +340,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
 
   const renderForm = () => (
 
-    <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
+    <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6 overflow-y-auto h-[80vh] lg:h-full">
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList >
