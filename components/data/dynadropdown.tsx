@@ -200,7 +200,7 @@ export default function DynamicDropdown({
 
   if (items.length > 0) {
     console.log(items)
-    items.filter((item) => {
+    filteredDataList = items.filter((item) => {
       try {
         if (title_key.includes('.')) {
           const [key, subKey] = title_key.split('.')
@@ -238,7 +238,7 @@ export default function DynamicDropdown({
           name={inputName(input.key)}
           value={selectedValues}
         />
-        <ScrollArea className="h-[200px] border rounded-md p-2">
+        <ScrollArea className="h-[200px] border rounded-md p-2 ">
           <div className="space-y-2">
             {filteredDataList.map((item) => (
               <div key={item.id} className="flex items-center space-x-2">
@@ -251,7 +251,17 @@ export default function DynamicDropdown({
                   htmlFor={`${label}-${item.id}`}
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  {item[title_key]}
+                  {title_key.includes('.') ? (
+                    <>
+                      {item[title_key.split('.')[0]][title_key.split('.')[1]]} id: {item['id']}
+                    </>
+                  ) : (
+                    <>
+                      {item[title_key]} id: {item['id']}
+                    </>
+                  )}
+
+
                 </Label>
               </div>
             ))}
