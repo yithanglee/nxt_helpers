@@ -220,7 +220,7 @@ export default function DynamicDropdown({
   const label = input.key.replace('_id', '')
   let alt_class = ''
   if (multiSelection) {
-    alt_class = 'w-full lg:w-1/3 mx-4 my-2'
+    alt_class = 'w-full lg:w-2/3 mx-4 my-2'
   }
 
   return (
@@ -238,10 +238,10 @@ export default function DynamicDropdown({
           name={inputName(input.key)}
           value={selectedValues}
         />
-        <ScrollArea className="h-[200px] border rounded-md p-2 ">
-          <div className="space-y-2">
+        <ScrollArea className="h-[300px] border rounded-md p-2  ">
+         
             {filteredDataList.map((item) => (
-              <div key={item.id} className="flex items-center space-x-2">
+              <div key={item.id} className="flex items-center space-x-2 space-y-2">
                 <Checkbox
                   id={`${label}-${item.id}`}
                   checked={selectedValues.includes(item.id)}
@@ -257,7 +257,7 @@ export default function DynamicDropdown({
                     </>
                   ) : (
                     <>
-                      {item[title_key]} id: {item['id']}
+                      {item[title_key]} <small className="text-muted-foreground">id: {item['id']}</small>
                     </>
                   )}
 
@@ -265,7 +265,7 @@ export default function DynamicDropdown({
                 </Label>
               </div>
             ))}
-          </div>
+          
         </ScrollArea>
         <div className="text-sm text-muted-foreground">
           {selectedValues.length} item(s) selected

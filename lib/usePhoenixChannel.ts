@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Socket, Channel } from 'phoenix'
 import { PHX_ENDPOINT, PHX_WS_PROTOCOL } from './constants'
 
@@ -11,8 +11,12 @@ interface CountData {
 export function usePhoenixChannel() {
     const [counts, setCounts] = useState<CountData>({})
     const [isConnected, setIsConnected] = useState(false)
+    const [isJoining, setIsJoining] = useState(false)
+    const channelRef = useRef<Channel | null>(null)
+    const joinTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-    const connect = useCallback(() => {
+    useEffect(() => {
+        // Initialize socket if it doesn't exist
         if (!socket) {
             socket = new Socket(`${PHX_WS_PROTOCOL}${PHX_ENDPOINT}/socket`)
             socket.onError(() => setIsConnected(false))
@@ -20,45 +24,68 @@ export function usePhoenixChannel() {
             socket.connect()
         }
 
-        const channel = socket.channel('user:sidebar', {})
+        // Only create and join channel if it doesn't exist and not currently joining
+        if (!channelRef.current && !isJoining && socket) {
+            setIsJoining(true)
 
-        channel.join()
-            .receive('ok', () => {
-                console.log('Successfully joined sidebar:counts channel')
-                setIsConnected(true)
-            })
-            .receive('error', (resp) => {
-                console.error('Unable to join sidebar:counts channel', resp)
-                setIsConnected(false)
-            })
+            // Clear any existing timeout
+            if (joinTimeoutRef.current) {
+                clearTimeout(joinTimeoutRef.current)
+            }
 
-        channel.on('update_counts', (payload: CountData) => {
-            setCounts(payload)
-        })
+            // Add delay before joining
+            const currentSocket = socket // Capture current socket
+            joinTimeoutRef.current = setTimeout(() => {
+                const channel = currentSocket.channel('user:sidebar', {})
+                channelRef.current = channel
 
-        return channel
-    }, [])
+                channel.join()
+                    .receive('ok', () => {
+                        console.log('Successfully joined sidebar:counts channel')
+                        setIsConnected(true)
+                        setIsJoining(false)
+                    })
+                    .receive('error', (resp) => {
+                        console.error('Unable to join sidebar:counts channel', resp)
+                        setIsConnected(false)
+                        setIsJoining(false)
+                        channelRef.current = null
+                    })
 
-    useEffect(() => {
-        const channel = connect()
+                channel.on('update_counts', (payload: CountData) => {
+                    setCounts(payload)
+                })
+            }, 2000) // 2 second delay before joining
+        }
 
+        // Set up heartbeat
         const pingInterval = setInterval(() => {
-            channel.push('ping', {})
-                .receive('ok', () => {
-                    console.log('Server is alive')
-                    setIsConnected(true)
-                })
-                .receive('error', () => {
-                    console.error('Unable to reach server')
-                    setIsConnected(false)
-                })
+            if (channelRef.current) {
+                channelRef.current.push('ping', {})
+                    .receive('ok', () => {
+                        console.log('Server is alive')
+                        setIsConnected(true)
+                    })
+                    .receive('error', () => {
+                        console.error('Unable to reach server')
+                        setIsConnected(false)
+                    })
+            }
         }, 10000) // Ping every 10 seconds
 
+        // Cleanup function
         return () => {
+            if (joinTimeoutRef.current) {
+                clearTimeout(joinTimeoutRef.current)
+            }
             clearInterval(pingInterval)
-            channel.leave()
+            if (channelRef.current) {
+                channelRef.current.leave()
+                channelRef.current = null
+            }
+            setIsJoining(false)
         }
-    }, [connect])
+    }, []) // Remove isJoining from dependencies to prevent infinite updates
 
     return { counts, isConnected }
 }
