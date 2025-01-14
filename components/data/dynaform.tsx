@@ -301,6 +301,8 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const formData = new FormData(form)
+    console.log("user")
+    console.log(user) 
 
     try {
       const response = await fetch(`${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${module}`, {

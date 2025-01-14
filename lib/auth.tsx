@@ -6,7 +6,7 @@ import Cookies from 'js-cookie'
 import { PHX_COOKIE, PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from './constants'
 
 // lib/auth.js
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from '../../src/lib/firebaseConfig';
 import { postData } from './svt_utils'
 
@@ -22,7 +22,8 @@ interface User {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (userData: User) => void
+  login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
   logout: () => void
   forgotPassword: (email: string) => Promise<void> 
 }
@@ -33,6 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+
+  // Add debug effect
+  useEffect(() => {
+    console.log('Auth state changed:', {
+      user,
+      isLoading,
+      hasCookie: Cookies.get(PHX_COOKIE)
+    });
+  }, [user, isLoading]);
 
   useEffect(() => {
     const checkExistingUser = async () => {
@@ -87,11 +97,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("User updated:", user);
   }, [user]);
 
-  const login = (userData: User) => {
-   
-  
-    setUser(userData)
-    setIsLoading(false)
+  const login = async (email: string, password: string) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const firebaseUser = userCredential.user;
+      
+      // Make the webhook call to your backend
+      const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`;
+      const response = await postData({
+        endpoint: `${url}/svt_api/webhook`,
+        data: {
+          scope: "google_signin",
+          result: {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email,
+          }
+        }
+      });
+
+      // Assuming your backend returns the user data in the format you need
+      if (response && response.user) {
+        setUser({
+          token: response.cookie,
+          username: response.user.username ?? '',
+          userStruct: response.user,
+          role_app_routes: response.user.role.role_app_routes ?? [],
+          id: response.user.id ?? 0,
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const logout = () => {
@@ -101,11 +141,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
   const forgotPassword = async (email: string) => {
-  
+    try {
+      await sendPasswordResetEmail(auth, email);
+      console.log('Password reset email sent successfully');
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      throw error;
+    }
   }
 
+  const loginWithGoogle = async () => {
+    try {
+      const googleProvider = new GoogleAuthProvider();
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = userCredential.user;
+      
+      // Make the webhook call to your backend
+      const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`;
+      const response = await postData({
+        endpoint: `${url}/svt_api/webhook`,
+        data: {
+          scope: "google_signin",
+          result: {
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: firebaseUser.displayName || firebaseUser.email,
+            photoURL: firebaseUser.photoURL,
+          }
+        }
+      });
+
+      // If backend returns user data, set it in state
+      if (response && response.user) {
+        // Store the cookie first
+        if (response.cookie) {
+          Cookies.set(PHX_COOKIE, response.cookie);
+        }
+
+        const userData = {
+          token: response.cookie,
+          username: response.user.username ?? firebaseUser.displayName ?? '',
+          userStruct: response.user,
+          role_app_routes: response.user.role.role_app_routes ?? [],
+          id: response.user.id ?? 0,
+        };
+        
+        // Set user state
+        setUser(userData);
+        
+        // Wait a bit to ensure state is updated before redirect
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Redirect to home or dashboard
+        router.push('/');
+      } else {
+        throw new Error('No user data received from backend');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      setUser(null);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, forgotPassword }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      loginWithGoogle, 
+      logout, 
+      forgotPassword 
+    }}>
       {children}
     </AuthContext.Provider>
   )
