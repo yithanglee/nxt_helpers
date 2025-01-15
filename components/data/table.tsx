@@ -152,6 +152,8 @@ export default function DataTable({
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [previewModal, setPreviewModal] = useState(false)
+
+  const [isLoading3, setIsLoading3] = useState(true)
   const [imgUrl, setImgUrl] = useState<string | null>(null)
   const [sortColumn, setSortColumn] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
@@ -160,83 +162,19 @@ export default function DataTable({
   let selectedData = {};
   let isLoading = false, isLoading2 = false;
   let dict: Record<any, any> = {};
-  // let order_statements: any[] = []
+
   const [order_statements, setOrderStatements] = useState<any[]>([])
-  // Fetch colInputs using genInputs inside useEffect
-  useEffect(() => {
-    const fetchColInputs = async () => {
-      isLoading = true;
-      const inputs = await genInputs(url, model);
-      isLoading = false;
-      setColInputs(inputs);
-    };
 
-    if (!isLoading && showNew) {
-
-      fetchColInputs();
-    }
-
-    const currentParams = new URLSearchParams(searchParams);
-    let qp = currentParams.get("page_no");
-    console.log(qp);
-    if (qp != "") {
-      // Set or update the page_no parameter
-      let pageNo = parseInt(qp!) || 1;
-      setCurrentPage(pageNo);
-    }
-
-  }, []);
-
-
-  useEffect(() => {
-    const pageNo = searchParams.get("page_no");
-    console.log("Updated page_no:", pageNo);
-    const currentParams = new URLSearchParams(searchParams);
-    let qp = currentParams.get("page_no");
-    console.log(qp);
-    if (qp != "") {
-      // Set or update the page_no parameter
-      let pageNo = parseInt(qp!) || 1;
-      setCurrentPage(pageNo);
-    }
-  }, [searchParams]);
-
-  const buildSearchString = useCallback((query: any) => {
-    if (Object.keys(query).length == 0) {
-      return {}
+  function buildSearchString(query: any) {
+    if (Object.keys(query).length === 0) {
+      return {};
     } else {
       const slist = Object.entries(query)
         .filter(([_, value]) => value)
-        .map(([key, value]) => `${key}=${value}`)
-      return slist.join('|') || search_queries.join('|')
+        .map(([key, value]) => `${key}=${value}`);
+      return slist.join('|') || search_queries.join('|');
     }
-
-
-  }, [search_queries])
-
-
-
-  const handleSort = useCallback((column: { label: string; data: string; subtitle?: { label: string; data: string; }; formatDateTime?: boolean; offset?: number; isBadge?: boolean; showImg?: boolean; showJson?: boolean; showPreview?: boolean; showDateTime?: boolean; color?: { key: string | boolean; value: string; }[]; through?: string[]; altClass?: string; }): void => {
-
-
-    const newSortColumn = column.through ? `${column.through[0]}.${column.data}` : column.data;
-    setSortColumn(newSortColumn);
-    const newSortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
-    setSortOrder(newSortOrder);
-    setOrderStatements([{ column: newSortColumn, dir: newSortOrder }])
-
-    // neeed to get existing join statement to get the mapping...
-
-
-  }, [sortOrder, sortColumn, order_statements]);
-
-
-  useEffect(() => {
-    console.log(order_statements)
-    fetchData(currentPage);
-  }, [order_statements])
-
-
+  }
 
   function buildQueryString(data: any, parentKey: any) {
     return Object.keys(data)
@@ -256,15 +194,35 @@ export default function DataTable({
       })
       .join('&');
   }
+
+
+
+
+  const handleSort = useCallback((column: { label: string; data: string; subtitle?: { label: string; data: string; }; formatDateTime?: boolean; offset?: number; isBadge?: boolean; showImg?: boolean; showJson?: boolean; showPreview?: boolean; showDateTime?: boolean; color?: { key: string | boolean; value: string; }[]; through?: string[]; altClass?: string; }): void => {
+    const newSortColumn = column.through ? `${column.through[0]}.${column.data}` : column.data;
+    setSortColumn(newSortColumn);
+    const newSortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+    setSortOrder(newSortOrder);
+    setOrderStatements([{ column: newSortColumn, dir: newSortOrder }])
+    setHasLoadedSearchQueries(true);
+    // neeed to get existing join statement to get the mapping...
+
+
+  }, [sortOrder, sortColumn, order_statements]);
+
+
+
   const fetchData = useCallback(async (pageNumber: number) => {
 
-    if (isLoading2) return; // Avoid fetching data while it's already being fetched
-    isLoading2 = true;
+    console.log("fetching data")
+    console.log(searchQuery)
 
+    if (isLoading2) return; // Avoid fetching data while it's already being fetched
+
+    isLoading2 = true;
     setError(null);
     let finalSearchQuery: Record<any, any> = {};
     finalSearchQuery = searchQuery
-
 
     try {
       for (const key in finalSearchQuery) {
@@ -272,10 +230,8 @@ export default function DataTable({
           delete finalSearchQuery[key];
         }
       }
-
     } catch (e) {
       console.error(e)
-
     }
 
 
@@ -305,6 +261,10 @@ export default function DataTable({
     };
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null).replaceAll("&&", "&");
+
+    console.log("from fetch data")
+    console.log(appendQueries)
+
     const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
     console.info(apiData)
     try {
@@ -319,9 +279,17 @@ export default function DataTable({
       }
 
       const dataList = await response.json();
-      setItems(dataList.data);
-      setData(dataList.data);
-      setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
+
+      if (dataList.data.data) {
+        setItems(dataList.data.data);
+        setData(dataList.data.data);
+        console.log(dataList.data.data)
+        setTotalPages(Math.ceil(dataList.data.recordsFiltered / itemsPerPage));
+      } else {
+        setItems(dataList.data);
+        setData(dataList.data);
+        setTotalPages(Math.ceil(dataList.recordsFiltered / itemsPerPage));
+      }
       isLoading2 = false
     } catch (error) {
       console.error('An error occurred', error);
@@ -331,81 +299,130 @@ export default function DataTable({
 
     }
   },
-    [model, searchQuery, appendQueries, preloads, buildSearchString, order_statements]
+    [model, searchQuery, appendQueries, preloads, order_statements]
   );
+  const [hasLoadedSearchQueries, setHasLoadedSearchQueries] = useState(false);
 
   useEffect(() => {
-    if (!isLoading2) {
-      fetchData(currentPage); // This will automatically fetch data when currentPage or searchQuery changes
+    // const pageNo = searchParams.get("page_no");
+    console.log("Updated page_no:", currentPage);
+    // const currentParams = new URLSearchParams(searchParams);
+    // let qp = currentParams.get("page_no");
+    // console.log(qp);
+    // if (qp != "") {
+    //   // Set or update the page_no parameter
+    //   let pageNo = parseInt(qp!) || 1;
+    //   console.log("page no")
+    //   console.log(pageNo)
+    //   setCurrentPage(pageNo);
+    // }
+    setHasLoadedSearchQueries(true);
+  }, [ currentPage]);
+
+
+  const [prevCurrentPage, setPrevCurrentPage] = useState(currentPage);
+  useEffect(() => {
+
+    console.log("has currentPagees")
+
+    console.log(currentPage)
+
+    if (search_queries.length > 0 && hasLoadedSearchQueries == true) {
+
+      console.log("fetching data from 2nd use effect when has loaded search queries")
+      fetchData(currentPage);
+      setHasLoadedSearchQueries(false);
+    } else if (search_queries.length == 0 && !isLoading2) {
+
+
+      console.log("fetching data from 2nd use effect")
+      console.log(search_queries)
+      fetchData(currentPage);
+    } else {
+      console.log("fetching data from 2nd use effect probably wut current page")
+
+
+      if (currentPage !== prevCurrentPage) {
+       
+        fetchData(currentPage);
+      }
+   
+     
+      // fetchData(currentPage);
+      // setHasLoadedSearchQueries(false);
     }
-  }, [currentPage, searchQuery]); // Trigger only when these states change
+    setPrevCurrentPage(currentPage);
+  }, [ searchQuery, order_statements, currentPage]);
 
 
   useEffect(() => {
+    if (search_queries.length > 0) {
+      const newDict: Record<string, string> = {};
 
-    console.log('searc h queyris')
-    console.log(search_queries)
-
-    for (let index = 0; index < search_queries.length; index++) {
-      const element = search_queries[index];
-      let singleS = element.split("|");
-      for (let index2 = 0; index2 < singleS.length; index2++) {
-        const sElement = singleS[index2];
-        if (sElement.includes("=")) {
-          if (sElement.split("=")[1] != 'undefined') {
-            dict[sElement.split("=")[0]] = sElement.split("=")[1]
-            setSearchQuery(prevQuery => ({ ...prevQuery, [sElement.split("=")[0]]: sElement.split("=")[1] }));
-
+      for (const query of search_queries) {
+        const singleS = query.split("|");
+        for (const sElement of singleS) {
+          if (sElement.includes("=")) {
+            const [key, value] = sElement.split("=");
+            if (value !== 'undefined') {
+              newDict[key] = value;
+            }
           }
         }
       }
+
+      // Only update if there are actual changes
+      if (Object.keys(newDict).length > 0) {
+        dict = newDict;
+        console.log("possible from here 1st?")
+        console.log(search_queries)
+        setSearchQuery(newDict);
+        setHasLoadedSearchQueries(true);
+      }
     }
+
+    console.log(search_queries)
   }, [search_queries]);
 
-  // const updateUrlWithSearch = useCallback(() => {
-  //   const searchParam = JSON.stringify(searchQuery)
-  //   const newParams = new URLSearchParams(searchParams.toString())
-  //   newParams.set('search', searchParam)
-  //   console.log(router)
-  //   router.replace(`${window.location.pathname}?${newParams.toString()}`, { scroll: false })
-  // }, [router, searchParams, searchQuery])
 
 
-  // const parseSearchFromUrl = useCallback(() => {
-  //   const searchParam = searchParams.get('search')
-  //   console.log(searchParam)
-  //   if (searchParam) {
-  //     try {
-  //       const parsedSearch = JSON.parse(searchParam)
-  //       console.log(parsedSearch)
-  //       setSearchQuery(parsedSearch)
-  //     } catch (error) {
-  //       console.error('Error parsing search query from URL:', error)
-  //     }
-  //   }
-  // }, [searchParams])
 
-  // Effect to update URL when search query changes
   useEffect(() => {
-    if (Object.keys(searchQuery).length) {
-      // updateUrlWithSearch()
+    const fetchColInputs = async () => {
+      isLoading = true;
+      const inputs = await genInputs(url, model);
+      isLoading = false;
+      setColInputs(inputs);
+    };
+
+    if (!isLoading && showNew) {
+      fetchColInputs();
     }
-  }, [searchQuery])
+
+    const currentParams = new URLSearchParams(searchParams);
+    let qp = currentParams.get("page_no");
+    if (qp) {
+      let pageNo = parseInt(qp) || 1;
+      console.log("initial page no")
+      setCurrentPage(pageNo);
+    }
+
+    if (!isLoading2 && Object.keys(dict).length === 0) {
+      console.log("call from 1st use efftect")
+      fetchData(currentPage);
+    }
+  }, []);
 
 
 
-  // Modify handleSearch to include URL update
   const handleSearch = (newSearchQuery: any) => {
     console.log('new search qur')
     console.log(newSearchQuery)
     setSearchQuery(newSearchQuery)
+    setHasLoadedSearchQueries(true);
     setCurrentPage(1)
     // updateUrlWithSearch()
   }
-  // Effect to parse search query from URL on initial load
-  // useEffect(() => {
-  //   parseSearchFromUrl()
-  // }, [parseSearchFromUrl])
 
   const handleNew = () => {
     setSelectedItem({ ...{ id: "0" }, ...appendQueries })
@@ -443,7 +460,6 @@ export default function DataTable({
     });
     setConfirmModalOpen(true);
   };
-
 
   const confirmModalFn = (bool: boolean, message: string, fn: () => void, opts?: any) => {
     setConfirmModalOpen(bool)
@@ -889,7 +905,7 @@ export default function DataTable({
           <div>
             <div className='lg:hidden '>
 
-              {items.map((item, itemIndex) => (
+              {items && items.map((item, itemIndex) => (
                 <Card key={itemIndex} className='p-0 mb-2'>
                   <div className='grid grid-flow-row auto-rows-max p-4'>
                     {columns.map((column, columnIndex) => (
@@ -954,7 +970,7 @@ export default function DataTable({
                 <TableHeader>
                   <TableRow>
                     {columns.map((column, index) => (
-                      <TableHead  className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
+                      <TableHead className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
 
                         <span className="caret">
                           {renderCaret(column)}

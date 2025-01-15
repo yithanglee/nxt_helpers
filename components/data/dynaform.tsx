@@ -208,6 +208,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
 
   if (key.selection) {
     if (input == null) {
+      console.log("no input")
       return ('')
     }
 
@@ -257,7 +258,7 @@ interface DynamicFormProps {
   inputs: any[]
   customCols: { title: string; description?: string; list: (string | { label: string;[key: string]: any })[] }[]
   module: string
-  postFn: () => void
+  postFn: (e: any) => void
   showNew?: boolean
   style?: string
 }
@@ -315,7 +316,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       })
 
       if (response.ok) {
-        postFn()
+        postFn(await response.json())
         setIsModalOpen(false)
         console.log("postFn toast")
         toast({
@@ -338,9 +339,10 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
 
     setFormData(data)
   }, [])
+
   const renderForm = () => (
 
-    <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6">
+    <form onSubmit={handleSubmit} id="currentForm" className="flex flex-col space-y-6 overflow-y-auto h-[80vh] lg:h-full">
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList >
@@ -431,7 +433,12 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
   )
 
   console.log("rendering form...")
-  console.log(formData)
+  try {
+    console.log(formData)
+  } catch (e){
+    console.error(e)
+  }
+
 
 
   if (style === 'flat') {

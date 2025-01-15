@@ -29,7 +29,7 @@ const IndexPage: React.FC<IndexPageProps> = ({ postFn }) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     let l = ["SEQ", "TITLE", "BARCODE", "ISBN", "AUTHOR",
-        "PUBLISHER", "DESCRIPTION", "CALL NO", "PRICE"]
+        "PUBLISHER", "DESCRIPTION", "SOURCE", "PRICE"]
     useEffect(() => {
         if (jRef.current && !jRef.current.jexcel) {
             const instance = jspreadsheet(jRef.current!, {
@@ -46,7 +46,7 @@ const IndexPage: React.FC<IndexPageProps> = ({ postFn }) => {
 
                     { type: 'text', title: 'PUBLISHER', width: 100 },
                     { type: 'text', title: 'DESCRIPTION', width: 100 },
-                    { type: 'text', title: 'CALL NO', width: 150 },
+                    { type: 'text', title: 'SOURCE', width: 150 },
                     { type: 'text', title: 'PRICE', width: 100 },
 
                 ], minDimensions: [9, 10]
@@ -70,9 +70,15 @@ const IndexPage: React.FC<IndexPageProps> = ({ postFn }) => {
             reader.onload = (e) => {
                 const content = e.target?.result;
 
+                console.log(content)
+
                 // Check if content is a string before calling .split
                 if (typeof content === "string") {
-                    let list = content.split("\r\n");
+
+
+                    let list: string[] = []
+                    
+                    list = content.replaceAll(/[\r\n]/g, "\n").split("\n");
                     const header = list.splice(0, 1);
 
                     // Explicitly type the arrays
