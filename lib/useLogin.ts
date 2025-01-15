@@ -117,7 +117,7 @@ export function useLogin() {
 
 
 
-        login({
+        simpleLogin({
           username: userData.data.email,
           token: res.data.access_token,
           userStruct: userData.data,

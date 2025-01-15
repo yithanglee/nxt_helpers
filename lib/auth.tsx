@@ -306,6 +306,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isLoading,
+      simpleLogin,
       login,
       loginWithGoogle,
       logout,
