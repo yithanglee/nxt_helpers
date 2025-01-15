@@ -26,6 +26,7 @@ interface User {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
+  simpleLogin: (userData: User) => void
   login: (email: string, password: string, origin: string) => Promise<void>
   loginWithGoogle: () => Promise<void>
   logout: () => void
@@ -115,6 +116,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log("User updated:", user);
   }, [user]);
+
+
+  const simpleLogin = (userData: User) => {
+
+
+    setUser(userData)
+    setIsLoading(false)
+  }
+
 
   const login = async (email: string, password: string, origin: string) => {
     try {
