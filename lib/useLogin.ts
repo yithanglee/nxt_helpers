@@ -25,7 +25,7 @@ async function postData(data: any, options: { endpoint: string }) {
 export function useLogin() {
   const { toast } = useToast()
   const [error, setError] = useState<string | null>(null)
-  const { login, logout } = useAuth()
+  const { simpleLogin, logout } = useAuth()
   const router = useRouter()
   const handleLogin = async (username: string, password: string, turnstileToken: string) => {
     setError(null)
@@ -57,7 +57,7 @@ export function useLogin() {
       if (res.status === 'ok') {
         Cookies.set(PHX_COOKIE!, res.res, { sameSite: 'Lax' })
 
-        login({
+        simpleLogin({
           username,
           token: res.res,
           userStruct: res.user,
@@ -117,7 +117,7 @@ export function useLogin() {
 
 
 
-        login({
+        simpleLogin({
           username: userData.data.email,
           token: res.data.access_token,
           userStruct: userData.data,

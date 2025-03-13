@@ -258,7 +258,7 @@ interface DynamicFormProps {
   inputs: any[]
   customCols: { title: string; description?: string; list: (string | { label: string;[key: string]: any })[] }[]
   module: string
-  postFn: () => void
+  postFn: (e: any) => void
   showNew?: boolean
   style?: string
 }
@@ -302,6 +302,8 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     e.preventDefault()
     const form = e.target as HTMLFormElement
     const formData = new FormData(form)
+    console.log("user")
+    console.log(user) 
 
     try {
       const response = await fetch(`${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${module}`, {
@@ -314,7 +316,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
       })
 
       if (response.ok) {
-        postFn()
+        postFn(await response.json())
         setIsModalOpen(false)
         console.log("postFn toast")
         toast({
