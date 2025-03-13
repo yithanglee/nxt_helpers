@@ -19,6 +19,7 @@ export async function postData(postDataOptions: PostDataOptions = {}) {
         additionalHeaders = {},
         successCallback
     } = postDataOptions;
+    console.log(data);
     let res;
     let cookieToken = Cookies.get(PHX_COOKIE!);
     let token = cookieToken != null ? cookieToken : 'empty';
