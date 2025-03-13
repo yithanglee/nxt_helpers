@@ -11,7 +11,7 @@ import { auth } from '../../src/lib/firebaseConfig';
 import { postData } from './svt_utils'
 
 import { onAuthStateChanged } from 'firebase/auth';
-import { toast } from '../../next_src/hooks/use-toast'
+import { toast } from '@/hooks/use-toast'
 
 
 interface User {
