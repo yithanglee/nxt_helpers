@@ -18,7 +18,9 @@ export function usePhoenixChannel() {
     useEffect(() => {
         // Initialize socket if it doesn't exist
         if (!socket) {
-            socket = new Socket(`${PHX_WS_PROTOCOL}${PHX_ENDPOINT}/socket`)
+            socket = new Socket(`${PHX_WS_PROTOCOL}${PHX_ENDPOINT}/socket`, {
+                heartbeatIntervalMs: 30000  // Set heartbeat interval to 30 seconds
+            })
             socket.onError(() => setIsConnected(false))
             socket.onClose(() => setIsConnected(false))
             socket.connect()
@@ -58,27 +60,11 @@ export function usePhoenixChannel() {
             }, 2000) // 2 second delay before joining
         }
 
-        // Set up heartbeat
-        const pingInterval = setInterval(() => {
-            if (channelRef.current) {
-                channelRef.current.push('ping', {})
-                    .receive('ok', () => {
-                        console.log('Server is alive')
-                        setIsConnected(true)
-                    })
-                    .receive('error', () => {
-                        console.error('Unable to reach server')
-                        setIsConnected(false)
-                    })
-            }
-        }, 10000) // Ping every 10 seconds
-
         // Cleanup function
         return () => {
             if (joinTimeoutRef.current) {
                 clearTimeout(joinTimeoutRef.current)
             }
-            clearInterval(pingInterval)
             if (channelRef.current) {
                 channelRef.current.leave()
                 channelRef.current = null
