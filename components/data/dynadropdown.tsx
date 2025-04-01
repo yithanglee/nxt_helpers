@@ -60,6 +60,9 @@ export default function DynamicDropdown({
   const cac_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT
   const itemsPerPage = 100
 
+  console.log(data, "data");
+  console.log(value, "dynamic dropdown value")
+
   const inputName = useCallback((key: string) => `${parent}[${key}]`, [parent])
 
   const tryPost = async () => {
@@ -238,34 +241,34 @@ export default function DynamicDropdown({
           name={inputName(input.key)}
           value={selectedValues}
         />
-        <ScrollArea className="h-[300px] border rounded-md p-2  ">
-         
-            {filteredDataList.map((item) => (
-              <div key={item.id} className="flex items-center space-x-2 space-y-2">
-                <Checkbox
-                  id={`${label}-${item.id}`}
-                  checked={selectedValues.includes(item.id)}
-                  onCheckedChange={() => handleSelect(item.id)}
-                />
-                <Label
-                  htmlFor={`${label}-${item.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {title_key.includes('.') ? (
-                    <>
-                      {item[title_key.split('.')[0]][title_key.split('.')[1]]} id: {item['id']}
-                    </>
-                  ) : (
-                    <>
-                      {item[title_key]} <small className="text-muted-foreground">id: {item['id']}</small>
-                    </>
-                  )}
+        <ScrollArea className="h-[300px] border rounded-md p-2 overflow-y-auto ">
+
+          {filteredDataList.map((item) => (
+            <div key={item.id} className="flex items-center space-x-2 space-y-2">
+              <Checkbox
+                id={`${label}-${item.id}`}
+                checked={selectedValues.includes(item.id)}
+                onCheckedChange={() => handleSelect(item.id)}
+              />
+              <Label
+                htmlFor={`${label}-${item.id}`}
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {title_key.includes('.') ? (
+                  <>
+                    {item[title_key.split('.')[0]][title_key.split('.')[1]]} id: {item['id']}
+                  </>
+                ) : (
+                  <>
+                    {item[title_key]} <small className="text-muted-foreground">id: {item['id']}</small>
+                  </>
+                )}
 
 
-                </Label>
-              </div>
-            ))}
-          
+              </Label>
+            </div>
+          ))}
+
         </ScrollArea>
         <div className="text-sm text-muted-foreground">
           {selectedValues.length} item(s) selected
@@ -301,10 +304,10 @@ export default function DynamicDropdown({
                 {items.map((item) => (
                   <DropdownMenuItem
                     key={item.id}
-                  onSelect={() => updateData(item.id, item[title_key.split(".")[0]][title_key.split(".")[1]])}
-                >
-                  {item[title_key.split(".")[0]][title_key.split(".")[1]]} id: {item['id']}
-                </DropdownMenuItem>
+                    onSelect={() => updateData(item.id, item[title_key.split(".")[0]][title_key.split(".")[1]])}
+                  >
+                    {item[title_key.split(".")[0]][title_key.split(".")[1]]} id: {item['id']}
+                  </DropdownMenuItem>
                 ))}
               </div>}
               {!title_key.includes(".") && items.map((item) => (

@@ -17,7 +17,7 @@ import {
 import { genInputs, postData } from '@/lib/svt_utils'
 import DynamicForm from './dynaform'
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL } from '@/lib/constants'
-import { ImageIcon, PlusIcon } from 'lucide-react'
+import { Edit, ImageIcon, MoreVertical, PlusIcon, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import SearchInput from './searchInput';
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -26,6 +26,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { DialogOverlay } from '@radix-ui/react-dialog';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 // Assuming these are defined in your environment variables
 
@@ -317,7 +318,7 @@ export default function DataTable({
     //   setCurrentPage(pageNo);
     // }
     setHasLoadedSearchQueries(true);
-  }, [ currentPage]);
+  }, [currentPage]);
 
 
   const [prevCurrentPage, setPrevCurrentPage] = useState(currentPage);
@@ -343,16 +344,16 @@ export default function DataTable({
 
 
       if (currentPage !== prevCurrentPage) {
-       
+
         fetchData(currentPage);
       }
-   
-     
+
+
       // fetchData(currentPage);
       // setHasLoadedSearchQueries(false);
     }
     setPrevCurrentPage(currentPage);
-  }, [ searchQuery, order_statements, currentPage]);
+  }, [searchQuery, order_statements, currentPage]);
 
 
   useEffect(() => {
@@ -425,13 +426,33 @@ export default function DataTable({
   }
 
   const handleNew = () => {
+    console.log(items, "items")
+    if (customCols && customCols.length > 0) {
+      customCols[0].list.forEach((item: any) => {
+        if (item.multiSelection) {
+          item.dataList = items.map((v: any) => {
+            return v[item.label];
+          });
+        }
+      });
+    }
     setSelectedItem({ ...{ id: "0" }, ...appendQueries })
     setIsModalOpen(true)
 
   }
 
   const handleEdit = (item: any) => {
+    console.log(items, "edit items")
+    console.log(item, "edit item")
 
+    if (customCols && customCols.length > 0) {
+      customCols[0].list.forEach((item: any) => {
+        if (item.multiSelection) {
+          item.dataList = items;
+        }
+      });
+    }
+    console.log(customCols, "customCols")
     setSelectedItem(item)
     setIsModalOpen(true)
   }
@@ -571,6 +592,7 @@ export default function DataTable({
 
 
   interface Column {
+    label?: string;
     altClass?: string;
     data: string
     subtitle?: { label: string, data: string }
@@ -649,7 +671,15 @@ export default function DataTable({
             </>)
           }
 
-          return data[through[0]][val]
+          return <>
+            <div className="text-sm lg:hidden flex items-center gap-2">
+              <span className="font-light text-gray-500">{column.label} : </span>
+              <span className="font-bold">{data[through[0]][val]}</span>
+            </div>
+            <div className="hidden lg:block">
+              {data[through[0]][val]}
+            </div>
+          </>
         } else {
           return ''
         }
@@ -727,9 +757,20 @@ export default function DataTable({
         showVal = value ? 'Yes' : 'No'
       }
       return (
-        <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
-          {showVal.replace("_", " ")}
-        </Badge>
+        <div>
+          <div className="lg:hidden flex items-center gap-2">
+            <span>{column.label}</span>
+            <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
+              {showVal.replace("_", " ")}
+            </Badge>
+          </div>
+          <div className="hidden lg:block">
+            <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
+              {showVal.replace("_", " ")}
+            </Badge>
+          </div>
+        </div>
+
       )
     }
     if (column.showJson) {
@@ -875,7 +916,7 @@ export default function DataTable({
           handleNew
         }><PlusIcon className="mr-2 h-4 w-4" />New</Button>}
       </div>
-      <div className=" rounded-md border">
+      <div className=" rounded-md ">
         {showGrid &&
           <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 lg:gap-4'>
 
@@ -906,7 +947,37 @@ export default function DataTable({
             <div className='lg:hidden '>
 
               {items && items.map((item, itemIndex) => (
-                <Card key={itemIndex} className='p-0 mb-2'>
+                <Card key={itemIndex} className='p-0 mb-2 relative'>
+                  <div className='absolute top-2 right-2'>
+
+
+                    <DropdownMenu >
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0 px-2">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
+
+
+                        {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}> <DropdownMenuItem>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        </Button>}
+                        {canDelete && <Button variant="ghost" onClick={() => handleDelete(item)}> <DropdownMenuItem>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                        </Button>}
+
+
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+
+
+                  </div>
                   <div className='grid grid-flow-row auto-rows-max p-4'>
                     {columns.map((column, columnIndex) => (
 
@@ -919,8 +990,8 @@ export default function DataTable({
                     ))}
                   </div>
 
-                  <CardFooter className='p-4 overflow-x-scroll w-100'>
-                    {canEdit && <Button variant="default" onClick={() => handleEdit(item)}>Edit</Button>}
+                  <CardFooter className='p-4 flex gap-2 overflow-x-scroll w-full'>
+
                     {buttons.map((button, buttonIndex) => {
                       if (button.showCondition && !button.showCondition(item)) {
                         return null;
@@ -928,7 +999,7 @@ export default function DataTable({
 
                       const buttonProps = {
                         key: buttonIndex,
-                        variant: "ghost" as const,
+                        variant: "outline" as const,
                         onClick: button.onclickFn
                           ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
                           : undefined
@@ -939,7 +1010,7 @@ export default function DataTable({
                       if (button.href) {
                         const href = typeof button.href === 'function' ? button.href(item) : button.href;
                         return (
-                          <Button asChild {...buttonProps}>
+                          <Button  asChild {...buttonProps}>
                             <Link href={href}>
                               {buttonContent}
                             </Link>
@@ -957,9 +1028,7 @@ export default function DataTable({
 
 
 
-                    {canDelete && (
-                      <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
-                    )}
+
                   </CardFooter>
                 </Card>
               ))}
@@ -994,7 +1063,8 @@ export default function DataTable({
                         </TableCell>
                       ))}
                       <TableCell>
-                        {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}>Edit</Button>}
+
+
                         {buttons.map((button, buttonIndex) => {
                           if (button.showCondition && !button.showCondition(item)) {
                             return null;
@@ -1028,12 +1098,32 @@ export default function DataTable({
                           );
                         })}
 
+                        <DropdownMenu >
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 px-2">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
+
+
+                            {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}> <DropdownMenuItem>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            </Button>}
+                            {canDelete && <Button variant="ghost" onClick={() => handleDelete(item)}> <DropdownMenuItem>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                            </Button>}
+
+
+                          </DropdownMenuContent>
+                        </DropdownMenu>
 
 
 
-                        {canDelete && (
-                          <Button variant="ghost" onClick={() => handleDelete(item)}>Delete</Button>
-                        )}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -231,7 +231,7 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
           selection={key.selection}
           join_statements={key.join_statements}
           multiSelection={key.multiSelection}
-          value={[]}
+          value={key.dataList}
 
         />
       </div>
@@ -269,7 +269,8 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
   const [formData, setFormData] = useState(data)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState('')
-
+  console.log(data, "form data")
+  console.log(customCols, "customCols")
   useEffect(() => {
     if (customCols.length > 0) {
       setSelectedTab(customCols[0].title)
@@ -303,7 +304,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
     const form = e.target as HTMLFormElement
     const formData = new FormData(form)
     console.log("user")
-    console.log(user) 
+    console.log(user)
 
     try {
       const response = await fetch(`${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}/svt_api/${module}`, {
@@ -390,7 +391,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
               onClick={() => setSelectedTab(col.title)}
             >
               <div className="flex items-center gap-2  hover:underline">
-               
+
                 {col.title}
               </div>
             </div>
@@ -404,7 +405,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
               className={`${selectedTab === col.title ? 'block' : 'hidden'}`}
             >
               <div className='text-lg font-bold'>{col.title} </div>
-             
+
               <div className='text-sm text-gray-500 mb-8'>Information here are available only to you</div>
               <Separator />
               <div className='h-2'></div>
@@ -435,7 +436,7 @@ export default function DynamicForm({ data, inputs, customCols, module, postFn, 
   console.log("rendering form...")
   try {
     console.log(formData)
-  } catch (e){
+  } catch (e) {
     console.error(e)
   }
 
