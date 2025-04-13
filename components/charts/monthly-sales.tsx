@@ -5,7 +5,7 @@ import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface MonthlySalesData {
@@ -173,18 +173,18 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({
 
         <div className="w-full">
           <h3 className="text-lg font-semibold mb-4">Monthly Sales Summary</h3>
-          <ScrollArea className="w-full whitespace-nowrap" type="scroll">
-            <div className="max-h-[400px]">
+          <ScrollArea className="w-full">
+            <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="sticky left-0 z-20 bg-background">Outlet</TableHead>
                     {months.map(month => (
-                      <TableHead key={month} className="text-right">
+                      <TableHead key={month} className="text-right min-w-[100px]">
                         {month.toUpperCase()}
                       </TableHead>
                     ))}
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right min-w-[100px]">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -219,6 +219,7 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({
                 </TableBody>
               </Table>
             </div>
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </div>
       </CardContent>
