@@ -104,6 +104,8 @@ interface DataTableProps {
   columns: {
     label: string
     data: string
+    formatMessage?: boolean
+    replaceFn?: (v: string) => string
     subtitle?: { label: string, data: string }
     formatDateTime?: boolean
     offset?: number
@@ -596,6 +598,8 @@ export default function DataTable({
     altClass?: string;
     data: string
     subtitle?: { label: string, data: string }
+    formatMessage?: boolean
+    replaceFn?: (v: string) => string
     showPreview?: boolean
     formatDate?: boolean
     formatDateTime?: boolean
@@ -732,6 +736,10 @@ export default function DataTable({
           </small>
         </>
       )
+    }
+
+    if (column.formatMessage) {
+      return column.replaceFn ? column.replaceFn(value) : value
     }
 
 
