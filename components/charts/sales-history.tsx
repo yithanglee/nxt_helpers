@@ -14,6 +14,8 @@ interface DailySalesData {
   day: number
   amount: number
   transactions: number
+  online: number
+  offline: number
 }
 
 interface OutletSalesData {
@@ -29,11 +31,13 @@ const processData = (data: any[]) => {
     const day = i + 1
     const dayData: { [key: string]: any } = { day: day }
     
-    // For each outlet, add their sales for this day
+    // For each outlet, add their online and offline sales for this day
     data.forEach(outlet => {
       if (outlet.outlet) {
-        const dayAmount = Number(outlet[`day_${day}`]) || 0
-        dayData[outlet.outlet] = dayAmount
+        const dayOnline = Number(outlet[`day_${day}_online_sum`]) || 0
+        const dayOffline = Number(outlet[`day_${day}_offline_sum`]) || 0
+        dayData[`${outlet.outlet}_online`] = dayOnline
+        dayData[`${outlet.outlet}_offline`] = dayOffline
       }
     })
     
@@ -86,16 +90,21 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   const filteredChartData = chartData.map(dayData => {
     const filteredData: { [key: string]: number | string } = { day: dayData.day }
     activeOutlets.forEach(outlet => {
-      filteredData[outlet] = Number(dayData[outlet]) || 0
+      filteredData[`${outlet}_online`] = Number(dayData[`${outlet}_online`]) || 0
+      filteredData[`${outlet}_offline`] = Number(dayData[`${outlet}_offline`]) || 0
     })
     return filteredData
   })
 
   // Create chart config with color property instead of theme
   const chartConfig = activeOutlets.reduce((acc, outlet, index) => {
-    acc[outlet] = {
-      color: `hsl(${index * 15}, 70%, 50%)`,
-      label: outlet
+    acc[`${outlet}_online`] = {
+      color: `hsl(${index * 30}, 70%, 50%)`,
+      label: `${outlet} (Online)`
+    }
+    acc[`${outlet}_offline`] = {
+      color: `hsl(${index * 30}, 70%, 30%)`,
+      label: `${outlet} (Offline)`
     }
     return acc
   }, {} as Record<string, { color: string; label: string }>)
@@ -104,15 +113,26 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   const outletData = activeOutlets.map(outlet => {
     const dailyValues = Array.from({ length: 31 }, (_, i) => {
       const day = i + 1
-      return filteredChartData.find(d => d.day === day)?.[outlet] as number || 0
+      const dayData = filteredChartData.find(d => d.day === day)
+      const onlineValue = Number(dayData?.[`${outlet}_online`]) || 0
+      const offlineValue = Number(dayData?.[`${outlet}_offline`]) || 0
+      return {
+        online: onlineValue,
+        offline: offlineValue,
+        total: onlineValue + offlineValue
+      }
     })
     
-    const total = dailyValues.reduce((sum, val) => sum + val, 0)
+    const total = dailyValues.reduce((sum, val) => sum + val.total, 0)
+    const onlineTotal = dailyValues.reduce((sum, val) => sum + val.online, 0)
+    const offlineTotal = dailyValues.reduce((sum, val) => sum + val.offline, 0)
     
     return {
       outlet,
+      dailyValues,
       total,
-      dailyValues
+      onlineTotal,
+      offlineTotal
     }
   })
 
@@ -120,7 +140,10 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   const dailyTotals = Array.from({ length: 31 }, (_, i) => {
     const day = i + 1
     return activeOutlets.reduce((sum, outlet) => {
-      return sum + (filteredChartData.find(d => d.day === day)?.[outlet] as number || 0)
+      const dayData = filteredChartData.find(d => d.day === day)
+      const onlineValue = Number(dayData?.[`${outlet}_online`]) || 0
+      const offlineValue = Number(dayData?.[`${outlet}_offline`]) || 0
+      return sum + onlineValue + offlineValue
     }, 0)
   })
 
@@ -129,6 +152,22 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
 
   return (
     <Card className="w-full mx-auto">
+      <style>
+        {`
+          .offline-row {
+            background-color: rgb(55, 65, 81);
+          }
+          .offline-row td {
+            color: white !important;
+          }
+          tr:hover {
+            background-color: inherit !important;
+          }
+          .offline-row:hover {
+            background-color: rgb(55, 65, 81) !important;
+          }
+        `}
+      </style>
       <CardHeader>
         <div className="flex justify-between items-center">
           <div>
@@ -188,12 +227,20 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                   <Tooltip />
                   <Legend />
                   {activeOutlets.map((outlet, index) => (
-                    <Bar
-                      key={outlet}
-                      dataKey={outlet}
-                      stackId="a"
-                      fill={`hsl(${index * 15}, 70%, 50%)`}
-                    />
+                    <React.Fragment key={outlet}>
+                      <Bar
+                        dataKey={`${outlet}_online`}
+                        stackId={outlet}
+                        fill={`hsl(${index * 30}, 70%, 50%)`}
+                        name={`${outlet} (Online)`}
+                      />
+                      <Bar
+                        dataKey={`${outlet}_offline`}
+                        stackId={outlet}
+                        fill={`hsl(${index * 30}, 70%, 30%)`}
+                        name={`${outlet} (Offline)`}
+                      />
+                    </React.Fragment>
                   ))}
                 </BarChart>
               </ResponsiveContainer>
@@ -210,6 +257,7 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="sticky left-0 z-20 bg-background">Outlet</TableHead>
+                    <TableHead className="text-right">Type</TableHead>
                     {Array.from({ length: 31 }, (_, i) => (
                       <TableHead key={i + 1} className="text-right">Day {i + 1}</TableHead>
                     ))}
@@ -217,21 +265,36 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {outletData.map(({ outlet, dailyValues, total }) => (
-                    <TableRow key={outlet}>
-                      <TableCell className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
-                      {dailyValues.map((value, i) => (
-                        <TableCell key={i} className="text-right">
-                          {value.toFixed(2)}
+                  {outletData.map(({ outlet, dailyValues, total, onlineTotal, offlineTotal }) => (
+                    <React.Fragment key={outlet}>
+                      <TableRow>
+                        <TableCell rowSpan={2} className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
+                        <TableCell className="text-right">Online</TableCell>
+                        {dailyValues.map((value, i) => (
+                          <TableCell key={i} className="text-right">
+                            {value.online.toFixed(2)}
+                          </TableCell>
+                        ))}
+                        <TableCell className="text-right font-semibold">
+                          {onlineTotal.toFixed(2)}
                         </TableCell>
-                      ))}
-                      <TableCell className="text-right font-semibold">
-                        {total.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
+                      </TableRow>
+                      <TableRow className="offline-row">
+                        <TableCell className="text-right">Offline</TableCell>
+                        {dailyValues.map((value, i) => (
+                          <TableCell key={i} className="text-right">
+                            {value.offline.toFixed(2)}
+                          </TableCell>
+                        ))}
+                        <TableCell className="text-right font-semibold">
+                          {offlineTotal.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
                   ))}
                   <TableRow className="bg-muted/50">
                     <TableCell className="sticky left-0 z-20 bg-muted/50 font-bold">Daily Total</TableCell>
+                    <TableCell className="text-right font-bold">All</TableCell>
                     {dailyTotals.map((total, i) => (
                       <TableCell key={i} className="text-right font-bold">
                         {total.toFixed(2)}
