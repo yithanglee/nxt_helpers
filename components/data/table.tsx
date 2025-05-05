@@ -676,11 +676,11 @@ export default function DataTable({
           }
 
           return <>
-            <div className="text-sm lg:hidden flex items-center gap-2">
+            <div className="hidden flex items-center gap-2">
               <span className="font-light text-gray-500">{column.label} : </span>
               <span className="font-bold">{data[through[0]][val]}</span>
             </div>
-            <div className="hidden lg:block">
+            <div className="block">
               {data[through[0]][val]}
             </div>
           </>
@@ -729,11 +729,14 @@ export default function DataTable({
     if (column.subtitle) {
       return (
         <>
-          {value}
-          <br />
-          <small className="font-extralight dark:text-white">
-            {item[column.subtitle.data]}
-          </small>
+          <div className="flex flex-col items-start gap-0">
+            <span>{value}</span>
+          
+            <small className="font-extralight dark:text-white">
+              {item[column.subtitle.data]}
+            </small>
+          </div>
+          
         </>
       )
     }
@@ -766,13 +769,13 @@ export default function DataTable({
       }
       return (
         <div>
-          <div className="lg:hidden flex items-center gap-2">
+          <div className="hidden flex items-center gap-2">
             <span>{column.label}</span>
             <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
               {showVal.replace("_", " ")}
             </Badge>
           </div>
-          <div className="hidden lg:block">
+          <div className="block">
             <Badge className="capitalize" variant={badgeColor(value, column.color) as any}>
               {showVal.replace("_", " ")}
             </Badge>
@@ -952,7 +955,105 @@ export default function DataTable({
 
         {!showGrid &&
           <div>
-            <div className='lg:hidden '>
+            <div className='overflow-x-scroll w-screen'>
+              <table className="lg:hidden w-full table-fixed">
+                <thead>
+                  <tr>
+                    {columns.map((column, index) => (
+                      <th key={index} className="px-2 py-2 text-left break-words w-[200px]">{column.label}</th>
+                    ))}
+                    <th className="px-2 py-2 text-left break-words w-[200px]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, itemIndex) => (
+                    <tr key={itemIndex}>
+                      {columns.map((column, columnIndex) => (
+                        <td key={columnIndex} className="px-2 py-1 break-words w-[200px] overflow-hidden text-ellipsis">
+
+                          {item[column.data] != "" && column.altClass && <div className={`${column.altClass} truncate`}>
+                            {renderCell(item, column)}
+                          </div>}
+                          {!column.altClass && <div className="truncate">
+                            {renderCell(item, column)}
+                          </div>}
+
+                        </td>
+                      ))}
+                      <td className="px-2 py-1 break-words w-[200px] overflow-hidden text-ellipsis">
+                      
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0 px-2">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
+                          {buttons.map((button, buttonIndex) => {
+                            if (button.showCondition && !button.showCondition(item)) {
+                              return null;
+                            }
+
+                            const buttonContent = <span>{button.name}</span>;
+
+                            if (button.href) {
+                              const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                              return (
+                                <Button key={buttonIndex} variant="ghost" asChild>
+                                  <Link href={href}>
+                                    <DropdownMenuItem>
+                                      {buttonContent}
+                                    </DropdownMenuItem>
+                                  </Link>
+                                </Button>
+                              );
+                            }
+
+                            return (
+                              <Button 
+                                key={buttonIndex}
+                                variant="ghost"
+                                onClick={button.onclickFn
+                                  ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
+                                  : undefined}
+                              >
+                                <DropdownMenuItem>
+                                  {buttonContent}
+                                </DropdownMenuItem>
+                              </Button>
+                            );
+                          })}
+
+                          {canEdit && 
+                            <Button variant="ghost" onClick={() => handleEdit(item)}>
+                              <DropdownMenuItem>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                            </Button>
+                          }
+                          {canDelete && 
+                            <Button variant="ghost" onClick={() => handleDelete(item)}>
+                              <DropdownMenuItem>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </Button>
+                          }
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+            </div>
+
+
+
+            <div className='hidden '>
 
               {items && items.map((item, itemIndex) => (
                 <Card key={itemIndex} className='p-0 mb-2 relative'>
@@ -1018,7 +1119,7 @@ export default function DataTable({
                       if (button.href) {
                         const href = typeof button.href === 'function' ? button.href(item) : button.href;
                         return (
-                          <Button  asChild {...buttonProps}>
+                          <Button asChild {...buttonProps}>
                             <Link href={href}>
                               {buttonContent}
                             </Link>
