@@ -148,8 +148,7 @@ export default function DataTable({
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({})
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [confirmModalMessage, setConfirmModalMessage] = useState('')
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
@@ -438,15 +437,10 @@ export default function DataTable({
         }
       });
     }
-    setSelectedItem({ ...{ id: "0" }, ...appendQueries })
-    setIsModalOpen(true)
-
+    setEditingRowId(null)
   }
 
   const handleEdit = (item: any) => {
-    console.log(items, "edit items")
-    console.log(item, "edit item")
-
     if (customCols && customCols.length > 0) {
       customCols[0].list.forEach((item: any) => {
         if (item.multiSelection) {
@@ -454,13 +448,20 @@ export default function DataTable({
         }
       });
     }
-    console.log(customCols, "customCols")
-    setSelectedItem(item)
-    setIsModalOpen(true)
+    setEditingRowId(item.id)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingRowId(null)
+  }
+
+  const handleSaveEdit = () => {
+    setEditingRowId(null)
+    fetchData(currentPage)
   }
 
   const handleDelete = (item: any) => {
-    setSelectedItem(item);
+    setEditingRowId(null)
     setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
       (async () => {
@@ -731,12 +732,12 @@ export default function DataTable({
         <>
           <div className="flex flex-col items-start gap-0">
             <span>{value}</span>
-          
+
             <small className="font-extralight dark:text-white">
               {item[column.subtitle.data]}
             </small>
           </div>
-          
+
         </>
       )
     }
@@ -959,190 +960,126 @@ export default function DataTable({
               <table className="lg:hidden w-full table-fixed">
                 <thead>
                   <tr>
+                    <th className="px-2 py-2 text-left break-words w-[80px] ">Actions</th>
+                    
+                    
                     {columns.map((column, index) => (
-                      <th key={index} className="px-2 py-2 text-left break-words w-[200px]">{column.label}</th>
+                      <th key={index} className="px-2 py-2 text-left break-words w-[240px] cursor-pointer" onClick={() => handleSort(column)}>
+                        {column.label}
+                        <span className="caret">
+                          {renderCaret(column)}
+                        </span>
+                      </th>
                     ))}
-                    <th className="px-2 py-2 text-left break-words w-[200px]">Actions</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, itemIndex) => (
-                    <tr key={itemIndex}>
-                      {columns.map((column, columnIndex) => (
-                        <td key={columnIndex} className="px-2 py-1 break-words w-[200px] overflow-hidden text-ellipsis">
+                    <React.Fragment key={itemIndex}>
+                      <tr>
+                      <td className="px-2 py-1 break-words w-[80px] overflow-hidden text-ellipsis">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0 px-2">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
+                              {buttons.map((button, buttonIndex) => {
+                                if (button.showCondition && !button.showCondition(item)) {
+                                  return null;
+                                }
 
-                          {item[column.data] != "" && column.altClass && <div className={`${column.altClass} truncate`}>
-                            {renderCell(item, column)}
-                          </div>}
-                          {!column.altClass && <div className="truncate">
-                            {renderCell(item, column)}
-                          </div>}
+                                const buttonContent = <span>{button.name}</span>;
 
-                        </td>
-                      ))}
-                      <td className="px-2 py-1 break-words w-[200px] overflow-hidden text-ellipsis">
-                      
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0 px-2">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
-                          {buttons.map((button, buttonIndex) => {
-                            if (button.showCondition && !button.showCondition(item)) {
-                              return null;
-                            }
+                                if (button.href) {
+                                  const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                                  return (
+                                    <Button key={buttonIndex} variant="ghost" asChild>
+                                      <Link href={href}>
+                                        <DropdownMenuItem>
+                                          {buttonContent}
+                                        </DropdownMenuItem>
+                                      </Link>
+                                    </Button>
+                                  );
+                                }
 
-                            const buttonContent = <span>{button.name}</span>;
-
-                            if (button.href) {
-                              const href = typeof button.href === 'function' ? button.href(item) : button.href;
-                              return (
-                                <Button key={buttonIndex} variant="ghost" asChild>
-                                  <Link href={href}>
+                                return (
+                                  <Button 
+                                    key={buttonIndex}
+                                    variant="ghost"
+                                    onClick={button.onclickFn
+                                      ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
+                                      : undefined}
+                                  >
                                     <DropdownMenuItem>
                                       {buttonContent}
                                     </DropdownMenuItem>
-                                  </Link>
+                                  </Button>
+                                );
+                              })}
+
+                              {canEdit && 
+                                <Button variant="ghost" onClick={() => handleEdit(item)}>
+                                  <DropdownMenuItem>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
                                 </Button>
-                              );
-                            }
-
-                            return (
-                              <Button 
-                                key={buttonIndex}
-                                variant="ghost"
-                                onClick={button.onclickFn
-                                  ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
-                                  : undefined}
-                              >
-                                <DropdownMenuItem>
-                                  {buttonContent}
-                                </DropdownMenuItem>
-                              </Button>
-                            );
-                          })}
-
-                          {canEdit && 
-                            <Button variant="ghost" onClick={() => handleEdit(item)}>
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                            </Button>
-                          }
-                          {canDelete && 
-                            <Button variant="ghost" onClick={() => handleDelete(item)}>
-                              <DropdownMenuItem>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </Button>
-                          }
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      </td>
-                    </tr>
+                              }
+                              {canDelete && 
+                                <Button variant="ghost" onClick={() => handleDelete(item)}>
+                                  <DropdownMenuItem>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </Button>
+                              }
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                        {columns.map((column, columnIndex) => (
+                          <td key={columnIndex} className="px-2 py-1 break-words overflow-hidden ">
+                            {item[column.data] != "" && column.altClass && <div className={`${column.altClass} truncate`}>
+                              {renderCell(item, column)}
+                            </div>}
+                            {!column.altClass && <div className="truncate">
+                              {renderCell(item, column)}
+                            </div>}
+                          </td>
+                        ))}
+                       
+                      </tr>
+                      {editingRowId === item.id && (
+                        <tr>
+                          <td colSpan={columns.length + 1} className="p-0">
+                            <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full ">
+                              <DynamicForm 
+                                data={item} 
+                                inputs={colInputs} 
+                                customCols={customCols} 
+                                module={model} 
+                                postFn={handleSaveEdit}
+                                style="flat"
+                              />
+                              <div className="flex justify-end gap-2 mt-4 px-2">
+                                <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                            
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
-
             </div>
 
 
 
-            <div className='hidden '>
-
-              {items && items.map((item, itemIndex) => (
-                <Card key={itemIndex} className='p-0 mb-2 relative'>
-                  <div className='absolute top-2 right-2'>
-
-
-                    <DropdownMenu >
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0 px-2">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
-
-
-                        {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}> <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        </Button>}
-                        {canDelete && <Button variant="ghost" onClick={() => handleDelete(item)}> <DropdownMenuItem>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                        </Button>}
-
-
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-
-
-                  </div>
-                  <div className='grid grid-flow-row auto-rows-max p-4'>
-                    {columns.map((column, columnIndex) => (
-
-                      <CardContent className='p-0 ' key={columnIndex}>
-                        {item[column.data] != "" && column.altClass && <div className={column.altClass}>
-                          {renderCell(item, column)}
-                        </div>}
-                        {!column.altClass && renderCell(item, column)}
-                      </CardContent>
-                    ))}
-                  </div>
-
-                  <CardFooter className='p-4 flex gap-2 overflow-x-scroll w-full'>
-
-                    {buttons.map((button, buttonIndex) => {
-                      if (button.showCondition && !button.showCondition(item)) {
-                        return null;
-                      }
-
-                      const buttonProps = {
-                        key: buttonIndex,
-                        variant: "outline" as const,
-                        onClick: button.onclickFn
-                          ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
-                          : undefined
-                      };
-
-                      const buttonContent = <span>{button.name}</span>;
-
-                      if (button.href) {
-                        const href = typeof button.href === 'function' ? button.href(item) : button.href;
-                        return (
-                          <Button asChild {...buttonProps}>
-                            <Link href={href}>
-                              {buttonContent}
-                            </Link>
-                          </Button>
-                        );
-                      }
-
-                      return (
-                        <Button {...buttonProps}>
-                          {buttonContent}
-                        </Button>
-                      );
-                    })}
-
-
-
-
-
-                  </CardFooter>
-                </Card>
-              ))}
-
-            </div>
             <div className='hidden lg:block w-full'>
               <Table className=''>
                 <TableHeader>
@@ -1160,81 +1097,100 @@ export default function DataTable({
                 </TableHeader>
                 <TableBody>
                   {items.map((item, itemIndex) => (
-                    <TableRow key={itemIndex}>
-                      {columns.map((column, columnIndex) => (
+                    <React.Fragment key={itemIndex}>
+                      <TableRow>
+                        {columns.map((column, columnIndex) => (
+                          <TableCell key={columnIndex}>
+                            {column.altClass && <div className={column.altClass}>
+                              {renderCell(item, column)}
+                            </div>}
+                            {!column.altClass && renderCell(item, column)}
+                          </TableCell>
+                        ))}
+                        <TableCell>
+                          {buttons.map((button, buttonIndex) => {
+                            if (button.showCondition && !button.showCondition(item)) {
+                              return null;
+                            }
 
-                        <TableCell key={columnIndex} >
-                          {column.altClass && <div className={column.altClass}>
-                            {renderCell(item, column)}
-                          </div>}
-                          {!column.altClass && renderCell(item, column)}
+                            const buttonProps = {
+                              key: buttonIndex,
+                              variant: "ghost" as const,
+                              onClick: button.onclickFn
+                                ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
+                                : undefined
+                            };
 
-                        </TableCell>
-                      ))}
-                      <TableCell>
+                            const buttonContent = <span>{button.name}</span>;
 
+                            if (button.href) {
+                              const href = typeof button.href === 'function' ? button.href(item) : button.href;
+                              return (
+                                <Button asChild {...buttonProps}>
+                                  <Link href={href}>
+                                    {buttonContent}
+                                  </Link>
+                                </Button>
+                              );
+                            }
 
-                        {buttons.map((button, buttonIndex) => {
-                          if (button.showCondition && !button.showCondition(item)) {
-                            return null;
-                          }
-
-                          const buttonProps = {
-                            key: buttonIndex,
-                            variant: "ghost" as const,
-                            onClick: button.onclickFn
-                              ? () => button.onclickFn!(item, button.name, () => fetchData(currentPage), confirmModalFn)
-                              : undefined
-                          };
-
-                          const buttonContent = <span>{button.name}</span>;
-
-                          if (button.href) {
-                            const href = typeof button.href === 'function' ? button.href(item) : button.href;
                             return (
-                              <Button asChild {...buttonProps}>
-                                <Link href={href}>
-                                  {buttonContent}
-                                </Link>
+                              <Button {...buttonProps}>
+                                {buttonContent}
                               </Button>
                             );
-                          }
+                          })}
 
-                          return (
-                            <Button {...buttonProps}>
-                              {buttonContent}
-                            </Button>
-                          );
-                        })}
-
-                        <DropdownMenu >
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 px-2">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
-
-
-                            {canEdit && <Button variant="ghost" onClick={() => handleEdit(item)}> <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            </Button>}
-                            {canDelete && <Button variant="ghost" onClick={() => handleDelete(item)}> <DropdownMenuItem>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                            </Button>}
-
-
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-
-
-                      </TableCell>
-                    </TableRow>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0 px-2">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="flex flex-col justify-center items-start">
+                              {canEdit &&
+                                <Button variant="ghost" onClick={() => handleEdit(item)}>
+                                  <DropdownMenuItem>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                </Button>
+                              }
+                              {canDelete &&
+                                <Button variant="ghost" onClick={() => handleDelete(item)}>
+                                  <DropdownMenuItem>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </Button>
+                              }
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                      {editingRowId === item.id && (
+                        <TableRow>
+                          <TableCell colSpan={columns.length + 1}>
+                            <div className="p-0">
+                              <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full mx-auto">
+                                <DynamicForm 
+                                  data={item} 
+                                  inputs={colInputs} 
+                                  customCols={customCols} 
+                                  module={model} 
+                                  postFn={handleSaveEdit}
+                                  style="flat"
+                                />
+                                <div className="flex justify-end gap-2 mt-4 px-2">
+                                  <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                                  
+                                </div>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
@@ -1245,25 +1201,8 @@ export default function DataTable({
         }
       </div>
       <PaginationComponent path={modelPath} totalPages={totalPages}></PaginationComponent>
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
 
-        <DialogContent className=''>
-          <DialogHeader>
-            <DialogTitle>Edit Item</DialogTitle>
-          </DialogHeader>
-          <DynamicForm data={selectedItem} inputs={colInputs} customCols={customCols} module={model} postFn={function (): void {
-            setIsModalOpen(false)
-            fetchData(currentPage);
-          }}
-
-          />
-        </DialogContent>
-
-
-      </Dialog>
-
-      <Dialog open={confirmModalOpen} onOpenChange={
-        setConfirmModalOpen}>
+      <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Action</DialogTitle>
