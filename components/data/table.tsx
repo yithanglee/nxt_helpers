@@ -149,7 +149,9 @@ export default function DataTable({
   const [totalPages, setTotalPages] = useState(0)
   const [searchQuery, setSearchQuery] = useState<Record<string, string>>({})
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState<any>(null)
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [confirmModalMessage, setConfirmModalMessage] = useState('')
   const [confirmModalFunction, setConfirmModalFunction] = useState<(() => void) | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -426,7 +428,7 @@ export default function DataTable({
     // updateUrlWithSearch()
   }
 
-  const handleNew = () => {
+  const _handleNew = () => {
     console.log(items, "items")
     if (customCols && customCols.length > 0) {
       customCols[0].list.forEach((item: any) => {
@@ -438,6 +440,21 @@ export default function DataTable({
       });
     }
     setEditingRowId(null)
+  }
+  const handleNew = () => {
+    console.log(items, "items")
+    if (customCols && customCols.length > 0) {
+      customCols[0].list.forEach((item: any) => {
+        if (item.multiSelection) {
+          item.dataList = items.map((v: any) => {
+            return v[item.label];
+          });
+        }
+      });
+    }
+    setSelectedItem({ ...{ id: "0" }, ...appendQueries })
+    setIsModalOpen(true)
+
   }
 
   const handleEdit = (item: any) => {
@@ -1201,6 +1218,22 @@ export default function DataTable({
         }
       </div>
       <PaginationComponent path={modelPath} totalPages={totalPages}></PaginationComponent>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+
+        <DialogContent className=''>
+          <DialogHeader>
+            <DialogTitle>Edit Item</DialogTitle>
+          </DialogHeader>
+          <DynamicForm data={selectedItem} inputs={colInputs} customCols={customCols} module={model} postFn={function (): void {
+            setIsModalOpen(false)
+            fetchData(currentPage);
+          }}
+
+          />
+        </DialogContent>
+
+
+      </Dialog>
 
       <Dialog open={confirmModalOpen} onOpenChange={setConfirmModalOpen}>
         <DialogContent>
