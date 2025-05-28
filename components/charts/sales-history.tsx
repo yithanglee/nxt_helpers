@@ -269,7 +269,7 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                     <React.Fragment key={outlet}>
                       <TableRow>
                         <TableCell rowSpan={2} className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
-                        <TableCell className="text-right">Online</TableCell>
+                        <TableCell className="text-right">QR</TableCell>
                         {dailyValues.map((value, i) => (
                           <TableCell key={i} className="text-right">
                             {value.online.toFixed(2)}
@@ -280,7 +280,7 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                         </TableCell>
                       </TableRow>
                       <TableRow className="offline-row">
-                        <TableCell className="text-right">Offline</TableCell>
+                        <TableCell className="text-right">Cash</TableCell>
                         {dailyValues.map((value, i) => (
                           <TableCell key={i} className="text-right">
                             {value.offline.toFixed(2)}
