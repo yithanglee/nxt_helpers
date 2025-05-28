@@ -100,11 +100,11 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   const chartConfig = activeOutlets.reduce((acc, outlet, index) => {
     acc[`${outlet}_online`] = {
       color: `hsl(${index * 30}, 70%, 50%)`,
-      label: `${outlet} (Online)`
+      label: `${outlet} (QR)`
     }
     acc[`${outlet}_offline`] = {
       color: `hsl(${index * 30}, 70%, 30%)`,
-      label: `${outlet} (Offline)`
+      label: `${outlet} (Cash)`
     }
     return acc
   }, {} as Record<string, { color: string; label: string }>)
