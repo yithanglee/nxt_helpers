@@ -232,13 +232,13 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                         dataKey={`${outlet}_online`}
                         stackId={outlet}
                         fill={`hsl(${index * 30}, 70%, 50%)`}
-                        name={`${outlet} (Online)`}
+                        name={`${outlet} (QR)`}
                       />
                       <Bar
                         dataKey={`${outlet}_offline`}
                         stackId={outlet}
                         fill={`hsl(${index * 30}, 70%, 30%)`}
-                        name={`${outlet} (Offline)`}
+                        name={`${outlet} (Cash)`}
                       />
                     </React.Fragment>
                   ))}
