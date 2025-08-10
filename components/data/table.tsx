@@ -981,7 +981,11 @@ export default function DataTable({
                     
                     
                     {columns.map((column, index) => (
-                      <th key={index} className="px-2 py-2 text-left break-words w-[240px] cursor-pointer" onClick={() => handleSort(column)}>
+                      <th
+                        key={index}
+                        className={`px-2 py-2 text-left break-words ${index === 0 ? 'w-[80px]' : 'w-[240px]'} cursor-pointer`}
+                        onClick={() => handleSort(column)}
+                      >
                         {column.label}
                         <span className="caret">
                           {renderCaret(column)}
