@@ -79,6 +79,8 @@ interface DataTableProps {
   showGrid?: boolean
   canDelete?: boolean
   canEdit?: boolean
+  useWebhook?: boolean
+  webhookScope?: string
   search_queries?: string[]
   join_statements?: Record<any, any>
   model: string
@@ -132,6 +134,8 @@ export default function DataTable({
   gridFn = () => { return '/' },
   canDelete = false,
   canEdit = true,
+  useWebhook = false,
+  webhookScope = 'datatable',
   join_statements = [],
   search_queries = [],
   model,
@@ -250,29 +254,42 @@ export default function DataTable({
       }
     }
 
-    const apiData = {
-      search: { regex: 'false', value: finalSearchQuery },
-      additional_join_statements: JSON.stringify(join_statements),
-      additional_search_queries: buildSearchString(searchQuery),
-      additional_order_statements: JSON.stringify(order_statements),
-      draw: '1',
-      length: itemsPerPage,
-      model: model,
-      columns: dataColumns,
-      order: { 0: { column: 0, dir: 'desc' } },
-      preloads: JSON.stringify(preloads),
-      start: (pageNumber - 1) * itemsPerPage,
-    };
+    const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
+
+    const apiData = useWebhook
+      ? {
+          scope: webhookScope,
+          model: model,
+          draw: '1',
+          length: itemsPerPage,
+          start: (pageNumber - 1) * itemsPerPage,
+        }
+      : {
+          search: { regex: 'false', value: finalSearchQuery },
+          additional_join_statements: JSON.stringify(join_statements),
+          additional_search_queries: buildSearchString(searchQuery),
+          additional_order_statements: JSON.stringify(order_statements),
+          draw: '1',
+          length: itemsPerPage,
+          model: model,
+          columns: dataColumns,
+          order: { 0: { column: 0, dir: 'desc' } },
+          preloads: JSON.stringify(preloads),
+          start: (pageNumber - 1) * itemsPerPage,
+        };
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null).replaceAll("&&", "&");
 
     console.log("from fetch data")
     console.log(appendQueries)
-
-    const blog_url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
     console.info(apiData)
+
+    const endpoint = useWebhook
+      ? `${blog_url}/svt_api/webhook?${queryString}`
+      : `${blog_url}/svt_api/${model}?${queryString}`;
+
     try {
-      const response = await fetch(`${blog_url}/svt_api/${model}?${queryString}`, {
+      const response = await fetch(endpoint, {
         headers: {
           'content-type': 'application/json'
         },
