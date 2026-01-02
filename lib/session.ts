@@ -1,6 +1,6 @@
-import { IronSessionOptions } from 'iron-session'
+import { SessionOptions } from 'iron-session'
 
-export const sessionOptions: IronSessionOptions = {
+export const sessionOptions: SessionOptions = {
   password: process.env.SECRET_COOKIE_PASSWORD as string,
   cookieName: 'my-app-session',
   cookieOptions: {
