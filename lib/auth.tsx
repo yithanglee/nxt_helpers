@@ -20,6 +20,7 @@ interface User {
   token: string
   role_app_routes: string[]
   id: number
+  organization_id: string
   uid?: string
 }
 
@@ -81,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (storedUser) {
             if (Object.keys(storedUser).includes('statusCode') && Object.keys(storedUser).includes('message') && Object.keys(storedUser).includes('data')) {
               setUser({
+                organization_id: storedUser.data.res.organization_id,
                 token: storedUser.data.res.tokens.access_token,
                 username: storedUser.data.res.admin.username ?? '',
                 userStruct: storedUser.data.res.admin,
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
             } else {
               setUser({
+                organization_id: storedUser.user.organization_id,
                 token: storedUser.cookie,
                 username: storedUser.user.username ?? '',
                 userStruct: storedUser.user,
@@ -164,7 +167,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username: response.data.res.username ?? firebaseUser.email ?? '',
           userStruct: response.data,
           role_app_routes: [],
-          id: response.data.res.id ?? 0
+          id: response.data.res.id ?? 0,
+          organization_id: response.data.res.organization_id ?? '',
         };
 
         // Set user state
@@ -231,6 +235,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userStruct: response.user,
           role_app_routes: response.user.role.role_app_routes ?? [],
           id: response.user.id ?? 0,
+          organization_id: response.user.organization_id ?? '',
         };
 
         // Set user state

@@ -62,7 +62,8 @@ export function useLogin() {
           token: res.res,
           userStruct: res.user,
           role_app_routes: res.role_app_routes,
-          id: res.user_id
+          id: res.user_id,
+          organization_id: res.user?.organization_id ?? '',
         })
 
         router.push('/dashboard')
@@ -94,7 +95,7 @@ export function useLogin() {
 
       if (res.statusCode === 200) {
         // Cookies.set(PHX_COOKIE!, res.res, { sameSite: 'Lax' })
-     
+
         Cookies.set(PHX_COOKIE!, res.data.access_token, { sameSite: 'Lax' })
 
         const userResponse = await fetch(`${url}/admin/me`, {
@@ -121,8 +122,9 @@ export function useLogin() {
           username: userData.data.email,
           token: res.data.access_token,
           userStruct: userData.data,
-          role_app_routes: res.role_app_routes || [] ,
-          id: userData.data.id
+          role_app_routes: res.role_app_routes || [],
+          id: userData.data.id,
+          organization_id: userData.data.organization_id ?? '',
         })
 
         router.push('/dashboard')
