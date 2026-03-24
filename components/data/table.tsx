@@ -120,6 +120,7 @@ interface DataTableProps {
     color?: { key: string | boolean, value: string }[]
     through?: string[]
     altClass?: string
+    renderFn?: (item: any, column: any) => React.ReactNode
   }[]
 }
 
@@ -258,25 +259,25 @@ export default function DataTable({
 
     const apiData = useWebhook
       ? {
-          scope: webhookScope,
-          model: model,
-          draw: '1',
-          length: itemsPerPage,
-          start: (pageNumber - 1) * itemsPerPage,
-        }
+        scope: webhookScope,
+        model: model,
+        draw: '1',
+        length: itemsPerPage,
+        start: (pageNumber - 1) * itemsPerPage,
+      }
       : {
-          search: { regex: 'false', value: finalSearchQuery },
-          additional_join_statements: JSON.stringify(join_statements),
-          additional_search_queries: buildSearchString(searchQuery),
-          additional_order_statements: JSON.stringify(order_statements),
-          draw: '1',
-          length: itemsPerPage,
-          model: model,
-          columns: dataColumns,
-          order: { 0: { column: 0, dir: 'desc' } },
-          preloads: JSON.stringify(preloads),
-          start: (pageNumber - 1) * itemsPerPage,
-        };
+        search: { regex: 'false', value: finalSearchQuery },
+        additional_join_statements: JSON.stringify(join_statements),
+        additional_search_queries: buildSearchString(searchQuery),
+        additional_order_statements: JSON.stringify(order_statements),
+        draw: '1',
+        length: itemsPerPage,
+        model: model,
+        columns: dataColumns,
+        order: { 0: { column: 0, dir: 'desc' } },
+        preloads: JSON.stringify(preloads),
+        start: (pageNumber - 1) * itemsPerPage,
+      };
 
     const queryString = buildQueryString({ ...apiData, ...appendQueries }, null).replaceAll("&&", "&");
 
@@ -645,6 +646,7 @@ export default function DataTable({
 
     isBadge?: boolean
     offset?: number
+    renderFn?: (item: any, column: Column) => React.ReactNode
   }
 
   const renderCell = (item: any, column: Column) => {
@@ -792,6 +794,9 @@ export default function DataTable({
 
     if (column.through) {
       return checkAssoc(item, column.data, column.through)
+    }
+    if (column.renderFn) {
+      return column.renderFn(item, column)
     }
 
     if (column.color) {
@@ -995,8 +1000,8 @@ export default function DataTable({
                 <thead>
                   <tr>
                     <th className="px-2 py-2 text-left break-words w-[80px] ">Actions</th>
-                    
-                    
+
+
                     {columns.map((column, index) => (
                       <th
                         key={index}
@@ -1009,14 +1014,14 @@ export default function DataTable({
                         </span>
                       </th>
                     ))}
-                    
+
                   </tr>
                 </thead>
                 <tbody>
                   {items.map((item, itemIndex) => (
                     <React.Fragment key={itemIndex}>
                       <tr>
-                      <td className="px-2 py-1 break-words w-[80px] overflow-hidden text-ellipsis">
+                        <td className="px-2 py-1 break-words w-[80px] overflow-hidden text-ellipsis">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0 px-2">
@@ -1045,7 +1050,7 @@ export default function DataTable({
                                 }
 
                                 return (
-                                  <Button 
+                                  <Button
                                     key={buttonIndex}
                                     variant="ghost"
                                     onClick={button.onclickFn
@@ -1059,7 +1064,7 @@ export default function DataTable({
                                 );
                               })}
 
-                              {canEdit && 
+                              {canEdit &&
                                 <Button variant="ghost" onClick={() => handleEdit(item)}>
                                   <DropdownMenuItem>
                                     <Edit className="mr-2 h-4 w-4" />
@@ -1067,7 +1072,7 @@ export default function DataTable({
                                   </DropdownMenuItem>
                                 </Button>
                               }
-                              {canDelete && 
+                              {canDelete &&
                                 <Button variant="ghost" onClick={() => handleDelete(item)}>
                                   <DropdownMenuItem>
                                     <Trash2 className="mr-2 h-4 w-4" />
@@ -1088,23 +1093,23 @@ export default function DataTable({
                             </div>}
                           </td>
                         ))}
-                       
+
                       </tr>
                       {editingRowId === item.id && (
                         <tr>
                           <td colSpan={columns.length + 1} className="p-0">
                             <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full ">
-                              <DynamicForm 
-                                data={item} 
-                                inputs={colInputs} 
-                                customCols={customCols} 
-                                module={model} 
+                              <DynamicForm
+                                data={item}
+                                inputs={colInputs}
+                                customCols={customCols}
+                                module={model}
                                 postFn={handleSaveEdit}
                                 style="flat"
                               />
                               <div className="flex justify-end gap-2 mt-4 px-2">
                                 <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                            
+
                               </div>
                             </div>
                           </td>
@@ -1211,17 +1216,17 @@ export default function DataTable({
                           <TableCell colSpan={columns.length + 1}>
                             <div className="p-0">
                               <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full mx-auto">
-                                <DynamicForm 
-                                  data={item} 
-                                  inputs={colInputs} 
-                                  customCols={customCols} 
-                                  module={model} 
+                                <DynamicForm
+                                  data={item}
+                                  inputs={colInputs}
+                                  customCols={customCols}
+                                  module={model}
                                   postFn={handleSaveEdit}
                                   style="flat"
                                 />
                                 <div className="flex justify-end gap-2 mt-4 px-2">
                                   <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-                                  
+
                                 </div>
                               </div>
                             </div>
