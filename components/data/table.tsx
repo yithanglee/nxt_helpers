@@ -27,6 +27,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { MagnifyingGlassIcon } from '@radix-ui/react-icons';
 import { DialogOverlay } from '@radix-ui/react-dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Checkbox } from "@/components/ui/checkbox"
 
 // Assuming these are defined in your environment variables
 
@@ -77,6 +78,25 @@ interface DataTableProps {
   appendQueries?: Record<any, any>
   showNew?: boolean
   showGrid?: boolean
+  enableMultiSelect?: boolean
+  getRowId?: (item: any) => string
+  idListSelected?: string[]
+  onIdListSelectedChange?: (idList: string[]) => void
+  bulkActions?: {
+    name: string
+    onClickFn: (
+      idListSelected: string[],
+      refreshData: () => void,
+      confirmModalFn: (
+        bool: boolean,
+        message: string,
+        fn: () => void,
+        opts?: any
+      ) => void,
+    ) => void
+    showCondition?: (idListSelected: string[]) => boolean
+    variant?: React.ComponentProps<typeof Button>["variant"]
+  }[]
   canDelete?: boolean
   canEdit?: boolean
   useWebhook?: boolean
@@ -133,6 +153,11 @@ export default function DataTable({
   showNew = false,
   showGrid = false,
   gridFn = () => { return '/' },
+  enableMultiSelect = false,
+  getRowId,
+  idListSelected,
+  onIdListSelectedChange,
+  bulkActions = [],
   canDelete = false,
   canEdit = true,
   useWebhook = false,
@@ -173,6 +198,48 @@ export default function DataTable({
   let dict: Record<any, any> = {};
 
   const [order_statements, setOrderStatements] = useState<any[]>([])
+  const [idSetSelectedInternal, setIdSetSelectedInternal] = useState<Set<string>>(new Set())
+
+  const resolveRowId = useCallback((item: any) => {
+    const raw = getRowId ? getRowId(item) : item?.id
+    return raw == null ? '' : String(raw)
+  }, [getRowId])
+
+  const idSetSelected = useCallback(() => {
+    if (!enableMultiSelect) return new Set<string>()
+    if (Array.isArray(idListSelected)) return new Set(idListSelected.map(String))
+    return idSetSelectedInternal
+  }, [enableMultiSelect, idListSelected, idSetSelectedInternal])
+
+  const setIdSetSelected = useCallback((next: Set<string>) => {
+    if (!enableMultiSelect) return
+    const idList = Array.from(next)
+    if (onIdListSelectedChange) onIdListSelectedChange(idList)
+    if (!Array.isArray(idListSelected)) setIdSetSelectedInternal(new Set(idList))
+  }, [enableMultiSelect, idListSelected, onIdListSelectedChange])
+
+  const idListSelectedResolved = enableMultiSelect ? Array.from(idSetSelected()) : []
+
+  const clearSelection = useCallback(() => {
+    setIdSetSelected(new Set())
+  }, [setIdSetSelected])
+
+  const toggleRowSelected = useCallback((rowId: string, checked: boolean) => {
+    const current = idSetSelected()
+    const next = new Set(current)
+    if (checked) next.add(rowId)
+    else next.delete(rowId)
+    setIdSetSelected(next)
+  }, [idSetSelected, setIdSetSelected])
+
+  const toggleAllOnPage = useCallback((checked: boolean) => {
+    const idsOnPage = items.map(resolveRowId).filter(Boolean)
+    const current = idSetSelected()
+    const next = new Set(current)
+    if (checked) idsOnPage.forEach(id => next.add(id))
+    else idsOnPage.forEach(id => next.delete(id))
+    setIdSetSelected(next)
+  }, [idSetSelected, items, resolveRowId, setIdSetSelected])
 
   function buildSearchString(query: any) {
     if (Object.keys(query).length === 0) {
@@ -375,6 +442,13 @@ export default function DataTable({
     }
     setPrevCurrentPage(currentPage);
   }, [searchQuery, order_statements, currentPage]);
+
+  useEffect(() => {
+    if (!enableMultiSelect) return
+    if (!onIdListSelectedChange) return
+    if (Array.isArray(idListSelected)) return
+    onIdListSelectedChange(Array.from(idSetSelectedInternal))
+  }, [enableMultiSelect, idSetSelectedInternal, idListSelected, onIdListSelectedChange])
 
 
   useEffect(() => {
@@ -955,6 +1029,27 @@ export default function DataTable({
   return (
 
     <div className="space-y-4">
+      {enableMultiSelect && idListSelectedResolved.length > 0 && (
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between rounded-md border px-3 py-2">
+          <div className="text-sm">
+            <span className="font-medium">{idListSelectedResolved.length}</span> selected
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {bulkActions
+              .filter(a => (a.showCondition ? a.showCondition(idListSelectedResolved) : true))
+              .map((action, idx) => (
+                <Button
+                  key={`${action.name}-${idx}`}
+                  variant={action.variant ?? "secondary"}
+                  onClick={() => action.onClickFn(idListSelectedResolved, () => fetchData(currentPage), confirmModalFn)}
+                >
+                  {action.name}
+                </Button>
+              ))}
+            <Button variant="ghost" onClick={clearSelection}>Clear</Button>
+          </div>
+        </div>
+      )}
       <div className="flex space-x-2">
         <SearchInput
           model={model}
@@ -999,6 +1094,22 @@ export default function DataTable({
               <table className="lg:hidden w-full table-fixed">
                 <thead>
                   <tr>
+                    {enableMultiSelect && (
+                      <th className="px-2 py-2 text-left break-words w-[48px]">
+                        <Checkbox
+                          checked={(() => {
+                            const idsOnPage = items.map(resolveRowId).filter(Boolean)
+                            if (idsOnPage.length === 0) return false
+                            const selected = idSetSelected()
+                            const all = idsOnPage.every(id => selected.has(id))
+                            const some = idsOnPage.some(id => selected.has(id))
+                            return all ? true : some ? "indeterminate" : false
+                          })()}
+                          onCheckedChange={(v) => toggleAllOnPage(!!v)}
+                          aria-label="Select all rows on page"
+                        />
+                      </th>
+                    )}
                     <th className="px-2 py-2 text-left break-words w-[80px] ">Actions</th>
 
 
@@ -1021,6 +1132,15 @@ export default function DataTable({
                   {items.map((item, itemIndex) => (
                     <React.Fragment key={itemIndex}>
                       <tr>
+                        {enableMultiSelect && (
+                          <td className="px-2 py-1 break-words w-[48px] overflow-hidden text-ellipsis">
+                            <Checkbox
+                              checked={idSetSelected().has(resolveRowId(item))}
+                              onCheckedChange={(v) => toggleRowSelected(resolveRowId(item), !!v)}
+                              aria-label={`Select row ${resolveRowId(item)}`}
+                            />
+                          </td>
+                        )}
                         <td className="px-2 py-1 break-words w-[80px] overflow-hidden text-ellipsis">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1097,7 +1217,7 @@ export default function DataTable({
                       </tr>
                       {editingRowId === item.id && (
                         <tr>
-                          <td colSpan={columns.length + 1} className="p-0">
+                          <td colSpan={columns.length + 1 + (enableMultiSelect ? 1 : 0)} className="p-0">
                             <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full ">
                               <DynamicForm
                                 data={item}
@@ -1127,6 +1247,22 @@ export default function DataTable({
               <Table className=''>
                 <TableHeader>
                   <TableRow>
+                    {enableMultiSelect && (
+                      <TableHead className="w-[48px]">
+                        <Checkbox
+                          checked={(() => {
+                            const idsOnPage = items.map(resolveRowId).filter(Boolean)
+                            if (idsOnPage.length === 0) return false
+                            const selected = idSetSelected()
+                            const all = idsOnPage.every(id => selected.has(id))
+                            const some = idsOnPage.some(id => selected.has(id))
+                            return all ? true : some ? "indeterminate" : false
+                          })()}
+                          onCheckedChange={(v) => toggleAllOnPage(!!v)}
+                          aria-label="Select all rows on page"
+                        />
+                      </TableHead>
+                    )}
                     {columns.map((column, index) => (
                       <TableHead className='cursor-pointer' key={index} onClick={() => handleSort(column)}>{column.label}
 
@@ -1142,6 +1278,15 @@ export default function DataTable({
                   {items.map((item, itemIndex) => (
                     <React.Fragment key={itemIndex}>
                       <TableRow>
+                        {enableMultiSelect && (
+                          <TableCell className="w-[48px]">
+                            <Checkbox
+                              checked={idSetSelected().has(resolveRowId(item))}
+                              onCheckedChange={(v) => toggleRowSelected(resolveRowId(item), !!v)}
+                              aria-label={`Select row ${resolveRowId(item)}`}
+                            />
+                          </TableCell>
+                        )}
                         {columns.map((column, columnIndex) => (
                           <TableCell key={columnIndex}>
                             {column.altClass && <div className={column.altClass}>
@@ -1213,7 +1358,7 @@ export default function DataTable({
                       </TableRow>
                       {editingRowId === item.id && (
                         <TableRow>
-                          <TableCell colSpan={columns.length + 1}>
+                          <TableCell colSpan={columns.length + 1 + (enableMultiSelect ? 1 : 0)}>
                             <div className="p-0">
                               <div className="p-2 border rounded-md bg-gray-50 w-[300px] lg:w-full mx-auto">
                                 <DynamicForm
