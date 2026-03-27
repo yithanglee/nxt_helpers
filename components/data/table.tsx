@@ -569,7 +569,7 @@ export default function DataTable({
     fetchData(currentPage)
   }
 
-  const handleDelete = (item: any) => {
+  const _handleDelete = (item: any) => {
     setEditingRowId(null)
     setConfirmModalMessage("Are you sure you want to delete this item?");
     setConfirmModalFunction(() => async () => {
