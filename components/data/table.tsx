@@ -56,6 +56,9 @@ interface CustomCol {
     upload?: boolean
     alt_class?: string
     date?: boolean
+    numeric?: boolean
+    alt_name?: string
+    expose?: boolean
   } | CustomSubCol)[]
 }
 interface CustomSubCol {
