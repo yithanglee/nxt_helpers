@@ -31,13 +31,15 @@ const processData = (data: any[]) => {
     const day = i + 1
     const dayData: { [key: string]: any } = { day: day }
     
-    // For each outlet, add their online and offline sales for this day
+    // For each outlet: online_sum → QR, offline_sum → Cash, topup_sum → top-up
     data.forEach(outlet => {
       if (outlet.outlet) {
         const dayOnline = Number(outlet[`day_${day}_online_sum`]) || 0
         const dayOffline = Number(outlet[`day_${day}_offline_sum`]) || 0
+        const dayTopup = Number(outlet[`day_${day}_topup_sum`]) || 0
         dayData[`${outlet.outlet}_online`] = dayOnline
         dayData[`${outlet.outlet}_offline`] = dayOffline
+        dayData[`${outlet.outlet}_topup`] = dayTopup
       }
     })
     
@@ -92,6 +94,7 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
     activeOutlets.forEach(outlet => {
       filteredData[`${outlet}_online`] = Number(dayData[`${outlet}_online`]) || 0
       filteredData[`${outlet}_offline`] = Number(dayData[`${outlet}_offline`]) || 0
+      filteredData[`${outlet}_topup`] = Number(dayData[`${outlet}_topup`]) || 0
     })
     return filteredData
   })
@@ -106,6 +109,10 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
       color: `hsl(${index * 30}, 70%, 30%)`,
       label: `${outlet} (Cash)`
     }
+    acc[`${outlet}_topup`] = {
+      color: `hsl(${index * 30}, 60%, 65%)`,
+      label: `${outlet} (Top-up)`
+    }
     return acc
   }, {} as Record<string, { color: string; label: string }>)
 
@@ -116,23 +123,27 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
       const dayData = filteredChartData.find(d => d.day === day)
       const onlineValue = Number(dayData?.[`${outlet}_online`]) || 0
       const offlineValue = Number(dayData?.[`${outlet}_offline`]) || 0
+      const topupValue = Number(dayData?.[`${outlet}_topup`]) || 0
       return {
         online: onlineValue,
         offline: offlineValue,
-        total: onlineValue + offlineValue
+        topup: topupValue,
+        total: onlineValue + offlineValue + topupValue
       }
     })
     
     const total = dailyValues.reduce((sum, val) => sum + val.total, 0)
     const onlineTotal = dailyValues.reduce((sum, val) => sum + val.online, 0)
     const offlineTotal = dailyValues.reduce((sum, val) => sum + val.offline, 0)
+    const topupTotal = dailyValues.reduce((sum, val) => sum + val.topup, 0)
     
     return {
       outlet,
       dailyValues,
       total,
       onlineTotal,
-      offlineTotal
+      offlineTotal,
+      topupTotal
     }
   })
 
@@ -143,7 +154,8 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
       const dayData = filteredChartData.find(d => d.day === day)
       const onlineValue = Number(dayData?.[`${outlet}_online`]) || 0
       const offlineValue = Number(dayData?.[`${outlet}_offline`]) || 0
-      return sum + onlineValue + offlineValue
+      const topupValue = Number(dayData?.[`${outlet}_topup`]) || 0
+      return sum + onlineValue + offlineValue + topupValue
     }, 0)
   })
 
@@ -165,6 +177,9 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
           }
           .offline-row:hover {
             background-color: rgb(55, 65, 81) !important;
+          }
+          .topup-row {
+            background-color: rgb(15 80 100 / 0.15);
           }
         `}
       </style>
@@ -253,6 +268,12 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                         fill={`hsl(${index * 30}, 70%, 30%)`}
                         name={`${outlet} (Cash)`}
                       />
+                      <Bar
+                        dataKey={`${outlet}_topup`}
+                        stackId={outlet}
+                        fill={`hsl(${index * 30}, 60%, 65%)`}
+                        name={`${outlet} (Top-up)`}
+                      />
                     </React.Fragment>
                   ))}
                 </BarChart>
@@ -278,10 +299,10 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {outletData.map(({ outlet, dailyValues, total, onlineTotal, offlineTotal }) => (
+                  {outletData.map(({ outlet, dailyValues, total, onlineTotal, offlineTotal, topupTotal }) => (
                     <React.Fragment key={outlet}>
                       <TableRow>
-                        <TableCell rowSpan={2} className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
+                        <TableCell rowSpan={3} className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
                         <TableCell className="text-right">QR</TableCell>
                         {dailyValues.map((value, i) => (
                           <TableCell key={i} className="text-right">
@@ -301,6 +322,17 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                         ))}
                         <TableCell className="text-right font-semibold">
                           {offlineTotal.toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="topup-row">
+                        <TableCell className="text-right">Top-up</TableCell>
+                        {dailyValues.map((value, i) => (
+                          <TableCell key={i} className="text-right">
+                            {value.topup.toFixed(2)}
+                          </TableCell>
+                        ))}
+                        <TableCell className="text-right font-semibold">
+                          {topupTotal.toFixed(2)}
                         </TableCell>
                       </TableRow>
                     </React.Fragment>
