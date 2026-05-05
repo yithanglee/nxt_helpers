@@ -36,7 +36,7 @@ const url = PHX_HTTP_PROTOCOL + PHX_ENDPOINT;
 interface CustomCol {
   title: string;
 
-  list: (string | {
+  list: (string | ({
     label: string
     hidden?: boolean
     value?: any
@@ -59,7 +59,7 @@ interface CustomCol {
     numeric?: boolean
     alt_name?: string
     expose?: boolean
-  } | CustomSubCol)[]
+  } & Record<string, any>) | CustomSubCol)[]
 }
 interface CustomSubCol {
   label: string;

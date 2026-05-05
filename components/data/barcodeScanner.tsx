@@ -43,7 +43,7 @@ export default function BarcodeScanner({ onScan, scanType }: BarcodeScannerProps
           {isScanning ? (
             <>
               <div className="relative aspect-video">
-                <video ref={ref} className="w-full h-full object-cover" />
+                <video ref={ref as React.RefObject<HTMLVideoElement>} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 border-2 border-red-500 animate-pulse pointer-events-none" />
               </div>
               <Button onClick={handleStopScan} variant="destructive">Stop Scanning</Button>
