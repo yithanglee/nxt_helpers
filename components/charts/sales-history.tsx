@@ -7,7 +7,6 @@ import { ChartContainer } from "@/components/ui/chart"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ScrollAreaScrollbar } from '@radix-ui/react-scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface DailySalesData {
@@ -181,6 +180,28 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
           .topup-row {
             background-color: rgb(15 80 100 / 0.15);
           }
+          .sales-summary-table > div {
+            overflow: visible;
+          }
+          .sales-summary-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background-color: hsl(var(--background));
+            box-shadow: 0 1px 0 hsl(var(--border));
+          }
+          .sales-summary-table .sticky-col-outlet {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: hsl(var(--background));
+          }
+          .sales-summary-table thead .sticky-col-outlet {
+            z-index: 30;
+          }
+          .sales-summary-table .daily-total-row .sticky-col-outlet {
+            background-color: hsl(var(--muted) / 0.5);
+          }
         `}
       </style>
       <CardHeader>
@@ -284,25 +305,24 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
 
         <div className="w-full">
           <h3 className="text-lg font-semibold mb-4">Daily Sales Summary</h3>
-          <ScrollArea className="w-full whitespace-nowrap " type="scroll">
-            <ScrollAreaScrollbar orientation="horizontal" />
-            <div className="max-h-[400px]">
-              <Table>
+          <div className="w-full max-h-[400px] overflow-auto">
+              <div className="sales-summary-table">
+              <Table className="border-separate border-spacing-0">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="sticky left-0 z-20 bg-background">Outlet</TableHead>
-                    <TableHead className="text-right">Type</TableHead>
+                    <TableHead className="sticky-col-outlet min-w-[150px]">Outlet</TableHead>
+                    <TableHead className="min-w-[72px] text-right">Type</TableHead>
                     {Array.from({ length: 31 }, (_, i) => (
-                      <TableHead key={i + 1} className="text-right">Day {i + 1}</TableHead>
+                      <TableHead key={i + 1} className="min-w-[72px] text-right">Day {i + 1}</TableHead>
                     ))}
-                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="min-w-[80px] text-right">Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {outletData.map(({ outlet, dailyValues, total, onlineTotal, offlineTotal, topupTotal }) => (
                     <React.Fragment key={outlet}>
                       <TableRow>
-                        <TableCell rowSpan={3} className="sticky left-0 z-20 bg-background font-medium">{outlet}</TableCell>
+                        <TableCell rowSpan={3} className="sticky-col-outlet font-medium">{outlet}</TableCell>
                         <TableCell className="text-right">QR</TableCell>
                         {dailyValues.map((value, i) => (
                           <TableCell key={i} className="text-right">
@@ -337,8 +357,8 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                       </TableRow>
                     </React.Fragment>
                   ))}
-                  <TableRow className="bg-muted/50">
-                    <TableCell className="sticky left-0 z-20 bg-muted/50 font-bold">Daily Total</TableCell>
+                  <TableRow className="daily-total-row bg-muted/50">
+                    <TableCell className="sticky-col-outlet font-bold">Daily Total</TableCell>
                     <TableCell className="text-right font-bold">All</TableCell>
                     {dailyTotals.map((total, i) => (
                       <TableCell key={i} className="text-right font-bold">
@@ -351,8 +371,8 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
                   </TableRow>
                 </TableBody>
               </Table>
-            </div>
-          </ScrollArea>
+              </div>
+          </div>
         </div>
       </CardContent>
     </Card>
