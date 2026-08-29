@@ -1001,9 +1001,15 @@ export default function DataTable({
     }
 
     if (column.isBadge) {
+      let badgeContent = ''
+      if (typeof value === 'boolean') {
+        badgeContent = value ? 'true' : 'false'
+      } else if (value != null) {
+        badgeContent = typeof value === 'string' ? value.split('_').join(' ') : String(value)
+      }
       return (
         <Badge className="capitalize" variant="default">
-          {value ? value.split('_').join(' ') : ''}
+          {badgeContent}
         </Badge>
       )
     }
