@@ -12,11 +12,12 @@ interface MemberJoinChartProps {
     year: string ;
     title: string;
     subtitle: string;
+    show_charts?: boolean;
 }
-const MemberJoinChart: React.FC<MemberJoinChartProps> = ({ data, year , title, subtitle}) => {
+const MemberJoinChart: React.FC<MemberJoinChartProps> = ({ data, year , title, subtitle, show_charts = true}) => {
 
-  if (!data || data.length === 0) {
-    return <div>No data available</div>
+  if (!data || data.length === 0 || !show_charts) {
+    return null
   }
 
   return (

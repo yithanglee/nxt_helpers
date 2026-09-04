@@ -57,13 +57,15 @@ interface MonthlySalesChartProps {
   year: string
   title?: string
   subtitle?: string
+  show_charts?: boolean
 }
 
 const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({ 
   data = [],
   year,
   title = "Monthly Sales by Outlet",
-  subtitle = "View monthly sales trends across all outlets"
+  subtitle = "View monthly sales trends across all outlets",
+  show_charts = true
 }) => {
   console.log('data', data)
   // Filter data for the selected year
@@ -97,7 +99,8 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({
   }, {} as Record<string, { color: string; label: string }>)
 
   // Calculate totals for the summary table
-  const outletTotals = activeOutlets.map(outlet => {
+  const effectiveOutlets = activeOutlets.length > 0 ? activeOutlets : outlets
+  const outletTotals = effectiveOutlets.map(outlet => {
     const monthlyValues = months.map(month => 
       chartData.find(d => d.month === month.toUpperCase())?.[outlet] as number || 0
     )
@@ -112,7 +115,7 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({
   })
 
   const monthlyTotals = months.map((_, index) => 
-    activeOutlets.reduce((sum, outlet) => 
+    effectiveOutlets.reduce((sum, outlet) => 
       sum + (outletTotals.find(o => o.outlet === outlet)?.monthlyValues[index] || 0), 0
     )
   )
@@ -126,50 +129,52 @@ const MonthlySalesChart: React.FC<MonthlySalesChartProps> = ({
         <CardDescription>{subtitle}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full lg:w-1/4">
-            <h3 className="text-lg font-semibold mb-2">Outlets</h3>
-            <ScrollArea className="h-[480px]">
-              {outlets.map(outlet => (
-                <div key={outlet} className="flex items-center space-x-2 mb-2">
-                  <Checkbox
-                    id={outlet}
-                    checked={activeOutlets.includes(outlet)}
-                    onCheckedChange={() => handleOutletToggle(outlet)}
-                  />
-                  <label
-                    htmlFor={outlet}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {outlet}
-                  </label>
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
-          <div className="w-full lg:w-3/4">
-            <ChartContainer className="h-[480px] w-full" config={chartConfig}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {activeOutlets.map((outlet, index) => (
-                    <Line
-                      key={outlet}
-                      type="monotone"
-                      dataKey={outlet}
-                      stroke={`hsl(${index * 15}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+        {show_charts && (
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full lg:w-1/4">
+              <h3 className="text-lg font-semibold mb-2">Outlets</h3>
+              <ScrollArea className="h-[480px]">
+                {outlets.map(outlet => (
+                  <div key={outlet} className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                      id={outlet}
+                      checked={activeOutlets.includes(outlet)}
+                      onCheckedChange={() => handleOutletToggle(outlet)}
                     />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                    <label
+                      htmlFor={outlet}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {outlet}
+                    </label>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <div className="w-full lg:w-3/4">
+              <ChartContainer className="h-[480px] w-full" config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {activeOutlets.map((outlet, index) => (
+                      <Line
+                        key={outlet}
+                        type="monotone"
+                        dataKey={outlet}
+                        stroke={`hsl(${index * 15}, 70%, 50%)`}
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="w-full">
           <h3 className="text-lg font-semibold mb-4">Monthly Sales Summary</h3>

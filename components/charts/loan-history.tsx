@@ -41,9 +41,10 @@ interface LoanHistoryChartProps {
     year: string ;
     title: string;
     subtitle: string;
+    show_charts?: boolean;
 }
 
-const LoanHistoryChart: React.FC<LoanHistoryChartProps> = ({ data, year, title, subtitle }) => {
+const LoanHistoryChart: React.FC<LoanHistoryChartProps> = ({ data, year, title, subtitle, show_charts = true }) => {
   const chartData = processData(data)
   const [activeCategories, setActiveCategories] = useState<string[]>(data.map(c => c.code))
 
@@ -68,53 +69,55 @@ const LoanHistoryChart: React.FC<LoanHistoryChartProps> = ({ data, year, title, 
         <CardDescription>{subtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full lg:w-1/4">
-            <h3 className="text-lg font-semibold mb-2">Categories</h3>
-            <ScrollArea className="h-[480px]">
-              {data.map(category => (
-                <div key={category.code} className="flex items-center space-x-2 mb-2">
-                  <Checkbox
-                    id={category.code}
-                    checked={activeCategories.includes(category.code)}
-                    onCheckedChange={() => handleCategoryToggle(category.code)}
-                  />
-                  <label
-                    htmlFor={category.code}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {category.category} ({category.code})
-                  </label>
-                </div>
-              ))}
-            </ScrollArea>
-          </div>
-          <div className="w-full lg:w-3/4">
-            <ChartContainer className="h-[480px] w-full" config={{
-              count: {
-                label: "Loan by categories",
-                color: "hsl(var(--chart-1))",
-              },
-            }}  >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={filteredChartData}>
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {activeCategories.map((category, index) => (
-                    <Bar
-                      key={category}
-                      dataKey={category}
-                      stackId="a"
-                      fill={`hsl(${index * 15}, 70%, 50%)`}
+        {show_charts && (
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full lg:w-1/4">
+              <h3 className="text-lg font-semibold mb-2">Categories</h3>
+              <ScrollArea className="h-[480px]">
+                {data.map(category => (
+                  <div key={category.code} className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                      id={category.code}
+                      checked={activeCategories.includes(category.code)}
+                      onCheckedChange={() => handleCategoryToggle(category.code)}
                     />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+                    <label
+                      htmlFor={category.code}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {category.category} ({category.code})
+                    </label>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <div className="w-full lg:w-3/4">
+              <ChartContainer className="h-[480px] w-full" config={{
+                count: {
+                  label: "Loan by categories",
+                  color: "hsl(var(--chart-1))",
+                },
+              }}  >
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={filteredChartData}>
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {activeCategories.map((category, index) => (
+                      <Bar
+                        key={category}
+                        dataKey={category}
+                        stackId="a"
+                        fill={`hsl(${index * 15}, 70%, 50%)`}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   )

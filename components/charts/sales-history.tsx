@@ -52,6 +52,7 @@ interface SalesHistoryChartProps {
   title: string
   subtitle: string
   onYearMonthChange?: (yearMonth: string) => void
+  show_charts?: boolean
 }
 
 const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({ 
@@ -59,7 +60,8 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   year, 
   title, 
   subtitle,
-  onYearMonthChange 
+  onYearMonthChange,
+  show_charts = true
 }) => {
   // Filter out entries without outlet names
   const validData = data.filter(d => d.outlet)
@@ -116,7 +118,8 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   }, {} as Record<string, { color: string; label: string }>)
 
   // Calculate daily totals for each outlet
-  const outletData = activeOutlets.map(outlet => {
+  const effectiveOutlets = activeOutlets.length > 0 ? activeOutlets : outlets
+  const outletData = effectiveOutlets.map(outlet => {
     const dailyValues = Array.from({ length: 31 }, (_, i) => {
       const day = i + 1
       const dayData = filteredChartData.find(d => d.day === day)
@@ -149,7 +152,7 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
   // Calculate daily totals across all outlets
   const dailyTotals = Array.from({ length: 31 }, (_, i) => {
     const day = i + 1
-    return activeOutlets.reduce((sum, outlet) => {
+    return effectiveOutlets.reduce((sum, outlet) => {
       const dayData = filteredChartData.find(d => d.day === day)
       const onlineValue = Number(dayData?.[`${outlet}_online`]) || 0
       const offlineValue = Number(dayData?.[`${outlet}_offline`]) || 0
@@ -245,63 +248,65 @@ const SalesHistoryChart: React.FC<SalesHistoryChartProps> = ({
         </div>
       </CardHeader>
       <CardContent className="space-y-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full lg:w-1/4">
-            <h3 className="text-lg font-semibold mb-2">Outlets</h3>
-            <ScrollArea className="h-[480px] " >
-           
-              {outlets.map(outlet => (
-                <div key={outlet} className="flex items-center space-x-2 mb-2">
-                  <Checkbox
-                    id={outlet}
-                    checked={activeOutlets.includes(outlet)}
-                    onCheckedChange={() => handleOutletToggle(outlet)}
-                  />
-                  <label
-                    htmlFor={outlet}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {outlet}
-                  </label>
-                </div>
-              ))}
-            </ScrollArea>
+        {show_charts && (
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="w-full lg:w-1/4">
+              <h3 className="text-lg font-semibold mb-2">Outlets</h3>
+              <ScrollArea className="h-[480px] " >
+             
+                {outlets.map(outlet => (
+                  <div key={outlet} className="flex items-center space-x-2 mb-2">
+                    <Checkbox
+                      id={outlet}
+                      checked={activeOutlets.includes(outlet)}
+                      onCheckedChange={() => handleOutletToggle(outlet)}
+                    />
+                    <label
+                      htmlFor={outlet}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {outlet}
+                    </label>
+                  </div>
+                ))}
+              </ScrollArea>
+            </div>
+            <div className="w-full lg:w-3/4">
+              <ChartContainer className="h-[480px] w-full" config={chartConfig}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={filteredChartData}>
+                    <XAxis dataKey="day" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    {activeOutlets.map((outlet, index) => (
+                      <React.Fragment key={outlet}>
+                        <Bar
+                          dataKey={`${outlet}_online`}
+                          stackId={outlet}
+                          fill={`hsl(${index * 30}, 70%, 50%)`}
+                          name={`${outlet} (QR)`}
+                        />
+                        <Bar
+                          dataKey={`${outlet}_offline`}
+                          stackId={outlet}
+                          fill={`hsl(${index * 30}, 70%, 30%)`}
+                          name={`${outlet} (Cash)`}
+                        />
+                        <Bar
+                          dataKey={`${outlet}_topup`}
+                          stackId={outlet}
+                          fill={`hsl(${index * 30}, 60%, 65%)`}
+                          name={`${outlet} (Top-up)`}
+                        />
+                      </React.Fragment>
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            </div>
           </div>
-          <div className="w-full lg:w-3/4">
-            <ChartContainer className="h-[480px] w-full" config={chartConfig}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={filteredChartData}>
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  {activeOutlets.map((outlet, index) => (
-                    <React.Fragment key={outlet}>
-                      <Bar
-                        dataKey={`${outlet}_online`}
-                        stackId={outlet}
-                        fill={`hsl(${index * 30}, 70%, 50%)`}
-                        name={`${outlet} (QR)`}
-                      />
-                      <Bar
-                        dataKey={`${outlet}_offline`}
-                        stackId={outlet}
-                        fill={`hsl(${index * 30}, 70%, 30%)`}
-                        name={`${outlet} (Cash)`}
-                      />
-                      <Bar
-                        dataKey={`${outlet}_topup`}
-                        stackId={outlet}
-                        fill={`hsl(${index * 30}, 60%, 65%)`}
-                        name={`${outlet} (Top-up)`}
-                      />
-                    </React.Fragment>
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </div>
-        </div>
+        )}
 
         <div className="w-full">
           <h3 className="text-lg font-semibold mb-4">Daily Sales Summary</h3>
