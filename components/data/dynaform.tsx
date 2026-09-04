@@ -87,7 +87,8 @@ const DynamicInput: React.FC<DynamicInputProps> = ({ input, keyName, module, dat
   }
 
   if (key.hidden) {
-    return <Input type="hidden" name={inputName(inputKey)} value={key.value} />
+    const hiddenValue = (key.value !== undefined && key.value !== null && key.value !== '') ? key.value : (value ?? '')
+    return <Input type="hidden" name={inputName(inputKey)} value={hiddenValue} />
   }
   // if (key.label == 'id') {
   //   return <Input type="hidden" name={inputName(inputKey)} value={key.value} />
