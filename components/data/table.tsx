@@ -110,7 +110,7 @@ interface DataTableProps {
   preloads?: string[] | Record<any, any>
   buttons?: {
     name: string
-    onclickFn: (
+    onclickFn?: (
       item: any,
       name: string,
       refreshData: () => void,
