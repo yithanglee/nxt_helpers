@@ -1,11 +1,10 @@
-// lib/firebaseConfig.js
+// Firebase Cloud Messaging only (auth identity uses Google OAuth + Phoenix).
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { postData } from './svt_utils';
 import Cookies from 'js-cookie';
 import { PHX_ENDPOINT, PHX_HTTP_PROTOCOL, PHX_COOKIE } from '@/lib/constants';
-import { toast, useToast } from '../hooks/use-toast';
+import { toast } from '../hooks/use-toast';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,22 +16,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-let messaging:any = null;
+let messaging: any = null;
 
-// Initialize messaging only on the client side and after service worker registration
 if (typeof window !== 'undefined') {
-  // Initialize messaging after making sure service worker is registered
   const initializeMessaging = async () => {
     try {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-          scope: '/'
+          scope: '/',
         });
-        
-        // Wait for the service worker to be ready
         await navigator.serviceWorker.ready;
-        
         messaging = getMessaging(app);
         console.log('Firebase messaging initialized with service worker:', registration);
       }
@@ -52,24 +45,18 @@ async function requestNotificationPermission() {
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      // Make sure we have a service worker registration
       const serviceWorkerRegistration = await navigator.serviceWorker.ready;
-      
+
       const currentToken = await getToken(messaging, {
         vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-        serviceWorkerRegistration
+        serviceWorkerRegistration,
       });
 
       if (currentToken) {
         await saveTokenToServer(currentToken);
-        // new Notification("Custom Notification", {
-        //   body: "This is shown while the app is open.",
-       
-        // });
-
         toast({
-          title: "FCM Token Saved",
-          description: "FCM Token Saved Successfully",
+          title: 'FCM Token Saved',
+          description: 'FCM Token Saved Successfully',
         });
         return currentToken;
       }
@@ -94,7 +81,6 @@ function onMessageListener() {
 
 async function saveTokenToServer(token: string) {
   try {
-    console.log("Checking existing user...");
     const storedCookie = Cookies.get(PHX_COOKIE);
 
     if (storedCookie) {
@@ -103,7 +89,7 @@ async function saveTokenToServer(token: string) {
         {
           method: 'GET',
           credentials: 'include',
-        }
+        },
       );
 
       if (!response.ok) {
@@ -113,14 +99,14 @@ async function saveTokenToServer(token: string) {
       const storedUser = await response.json();
 
       if (storedUser) {
-        let url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`;
+        const url = `${PHX_HTTP_PROTOCOL}${PHX_ENDPOINT}`;
         await postData({
           endpoint: `${url}/svt_api/webhook`,
-          data: { 
-            token: token, 
-            user_token: storedUser.cookie, 
-            scope: 'user_fcm_token' 
-          }
+          data: {
+            token: token,
+            user_token: storedUser.cookie,
+            scope: 'user_fcm_token',
+          },
         });
         console.log('FCM token saved successfully');
       }
@@ -131,4 +117,4 @@ async function saveTokenToServer(token: string) {
   }
 }
 
-export { auth, requestNotificationPermission, onMessageListener };
+export { requestNotificationPermission, onMessageListener };

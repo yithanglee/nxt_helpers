@@ -1,20 +1,12 @@
 "use client"
-// context/AuthContext.js
-import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../lib/firebaseConfig';
-import { onAuthStateChanged } from 'firebase/auth';
+// Legacy Firebase Auth context — identity now uses Phoenix sessions.
+// Kept as a no-op provider so old imports do not break; prefer `@/lib/auth`.
+import { createContext, useContext, useState } from 'react';
 
-const AuthContext = createContext();
+const AuthContext = createContext({ user: null });
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user || null);
-    });
-    return () => unsubscribe();
-  }, []);
+  const [user] = useState(null);
 
   return (
     <AuthContext.Provider value={{ user }}>
