@@ -55,15 +55,15 @@ export function useLogin() {
       })
 
       if (res.status === 'ok') {
-        Cookies.set(PHX_COOKIE!, res.res, { sameSite: 'Lax' })
+        Cookies.set(PHX_COOKIE!, res.res, { path: '/', sameSite: 'Lax' })
 
         simpleLogin({
           username,
           token: res.res,
-          userStruct: res.user,
-          role_app_routes: res.role_app_routes,
-          id: res.user_id,
-          organization_id: res.user?.organization_id ?? '',
+          userStruct: res.user || res.userStruct,
+          role_app_routes: res.role_app_routes || [],
+          id: res.user_id || res.id,
+          organization_id: (res.user || res.userStruct)?.organization_id ?? '',
         })
 
         router.push('/dashboard')
@@ -94,9 +94,7 @@ export function useLogin() {
       })
 
       if (res.statusCode === 200) {
-        // Cookies.set(PHX_COOKIE!, res.res, { sameSite: 'Lax' })
-
-        Cookies.set(PHX_COOKIE!, res.data.access_token, { sameSite: 'Lax' })
+        Cookies.set(PHX_COOKIE!, res.data.access_token, { path: '/', sameSite: 'Lax' })
 
         const userResponse = await fetch(`${url}/admin/me`, {
           method: 'GET',
@@ -141,7 +139,7 @@ export function useLogin() {
 
   const handleLogout = () => {
     logout()
-    Cookies.remove(PHX_COOKIE!)
+    Cookies.remove(PHX_COOKIE!, { path: '/' })
     router.push('/login')
     setTimeout(() => {
       location.reload()

@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children, allowedRoutes = [] }: Protect
     if (!isLoading) {
       // If not authenticated, redirect to login
       if (!user) {
-        router.push('/')
+        router.push('/login')
         return
       }
 
@@ -50,8 +50,12 @@ export default function ProtectedRoute({ children, allowedRoutes = [] }: Protect
   }, [user, isLoading, router, pathname, allowedRoutes])
 
   // Show loading state while checking authentication or access
-  if (isLoading || !user?.userStruct?.role || !hasAccess) {
-    return <div>Loading...</div>
+  if (isLoading || !user || !hasAccess) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-sm text-gray-500 animate-pulse">Loading...</div>
+      </div>
+    )
   }
 
   // Only render children if user has been granted access

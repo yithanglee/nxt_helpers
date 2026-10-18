@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No session token from server')
     }
 
-    Cookies.set(PHX_COOKIE!, token)
+    Cookies.set(PHX_COOKIE!, token, { path: '/', sameSite: 'Lax' })
     setUser({
       token,
       username: response.user?.username ?? email,
@@ -130,13 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: response.user_id ?? response.id ?? response.user?.id ?? 0,
       organization_id: response.user?.organization_id ?? '',
     })
-    router.push('/')
+    router.push('/dashboard')
   }
 
   const logout = () => {
     setUser(null)
     setIsLoading(false)
-    Cookies.remove(PHX_COOKIE)
+    Cookies.remove(PHX_COOKIE, { path: '/' })
     router.push('/login')
   }
 
@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ''
 
         if (token) {
-          Cookies.set(PHX_COOKIE!, token)
+          Cookies.set(PHX_COOKIE!, token, { path: '/', sameSite: 'Lax' })
         }
 
         const userData: User = {
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUser(userData)
         await new Promise((resolve) => setTimeout(resolve, 100))
-        router.push('/')
+        router.push('/dashboard')
         return
       }
 
